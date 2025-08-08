@@ -1,0 +1,177 @@
+import 'dart:math' show Random;
+
+import 'package:get/get.dart';
+import '../domain/entities/bible_book.dart';
+import '../domain/entities/chapters.dart';
+import '../domain/entities/verse.dart';
+import '../domain/repositories/bible_repository.dart';
+
+class BibleController extends GetxController {
+  final BibleRepository repository;
+
+  BibleController({required this.repository, });
+
+  var books = <BibleBook>[].obs;
+  var selectedBook = Rxn<BibleBook>();
+  var chapters = <Chapter>[].obs;
+  var selectedChapter = Rxn<Chapter>();
+  var verses = <Verse>[].obs;
+var selectedTranslation = 'KJV'.obs;
+  var isLoading = false.obs;
+  var error = ''.obs;
+var verseOfTheDay = Rx<VerseModel?>(null);
+  @override
+  void onInit() {
+    super.onInit();
+    loadBooks();
+  }
+void setTranslation(String newTranslation) {
+  selectedTranslation.value = newTranslation;
+  // Optionally reload verses using new translation
+  if (selectedBook.value != null && selectedChapter.value != null) {
+    loadVerses(selectedBook.value!.abbreviation, selectedChapter.value!.chapterNumber);
+  }
+}
+void loadVerseOfTheDay() {
+  final random = Random();
+  final randomBook = bibleBooks[random.nextInt(bibleBooks.length)];
+  final randomChapter = random.nextInt(randomBook.chapters.length);
+  final verses = randomBook.chapters[randomChapter];
+  final randomVerse = verses[random.nextInt(verses.length)];
+
+  verseOfTheDay.value = randomVerse;
+}
+
+  Future<void> loadBooks() async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      final loadedBooks = await repository.getBooks();
+      books.value = loadedBooks;
+      if (loadedBooks.isNotEmpty) {
+        selectBook(loadedBooks.first);
+      }
+    } catch (e) {
+      error.value = 'Failed to load books';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> selectBook(BibleBook book) async {
+    selectedBook.value = book;
+    await loadChapters(book.abbreviation);
+  }
+
+  Future<void> loadChapters(String bookAbbreviation) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      final loadedChapters = await repository.getChapters(bookAbbreviation);
+      chapters.value = loadedChapters;
+      if (loadedChapters.isNotEmpty) {
+        selectChapter(loadedChapters.first);
+      }
+    } catch (e) {
+      error.value = 'Failed to load chapters';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> selectChapter(Chapter chapter) async {
+    selectedChapter.value = chapter;
+    await loadVerses(chapter.bookAbbreviation, chapter.chapterNumber);
+  }
+
+Future<void> loadVersesByReference(String reference) async {
+  try {
+    isLoading.value = true;
+    error.value = '';
+
+    // Example input: "1 John 3:16"
+    final regex = RegExp(r'^(.+?)\s+(\d+):(\d+)$');
+    final match = regex.firstMatch(reference.trim());
+    if (match == null) {
+      error.value = 'Invalid format. Use e.g. John 3:16';
+      return;
+    }
+    final bookName = match.group(1)!.trim();
+    final chapterNum = int.tryParse(match.group(2)!);
+    final verseNum = int.tryParse(match.group(3)!);
+
+    if (chapterNum == null || verseNum == null) {
+      error.value = 'Invalid chapter or verse number.';
+      return;
+    }
+
+    // Try to find the book by name or abbreviation
+    final book = books.firstWhereOrNull((b) =>
+      b.name.toLowerCase() == bookName.toLowerCase() ||
+      b.abbreviation.toLowerCase() == bookName.toLowerCase()
+    );
+
+    if (book == null) {
+      error.value = 'Book not found: $bookName';
+      return;
+    }
+
+    final versesResult = await repository.getVerses(book.abbreviation, chapterNum);
+
+    final filtered = versesResult.where((v) => v.verseNumber == verseNum).toList();
+    if (filtered.isEmpty) {
+      error.value = 'Verse not found.';
+    } else {
+      verses.assignAll(filtered);
+
+    }
+  } catch (e) {
+    error.value =  e.toString();
+  } finally {
+    isLoading.value = false;
+  }
+}
+Future<void> searchVerses(String input) async {
+  try {
+    isLoading.value = true;
+    error.value = '';
+    verses.clear();
+
+    // Regex to detect book chapter:verse pattern (e.g. John 3:16)
+    final regex = RegExp(r'^(.+?)\s+(\d+):(\d+)$');
+    final match = regex.firstMatch(input.trim());
+
+    if (match != null) {
+      // Specific verse reference
+      await loadVersesByReference(input);
+    } else {
+      // Keyword search for random words
+      final results = await repository.searchVerses(input);
+      if (results.isEmpty) {
+        error.value = 'No verses found for "$input"';
+      } else {
+        verses.assignAll(results);
+      }
+    }
+  } catch (e) {
+    error.value = 'Search failed: ${e.toString()}';
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+
+  Future<void> loadVerses(String bookAbbreviation, int chapterNumber) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      final loadedVerses = await repository.getVerses(bookAbbreviation, chapterNumber);
+      verses.assignAll(loadedVerses);
+
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}
