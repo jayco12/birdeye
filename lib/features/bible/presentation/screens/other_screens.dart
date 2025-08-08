@@ -9,9 +9,13 @@ class VerseWebViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(url));
+    
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: WebViewWidget(controller: WebViewController()..loadRequest(Uri.parse(url))),
+      body: WebViewWidget(controller: controller),
     );
   }
 }

@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 import 'bible_controller.dart';
+import 'ai_controller.dart';
 import '../../bible/data/datasources/bible_api_service.dart';
 import '../../bible/data/repositories/bible_repository_impl.dart';
-import '../../bible/domain/repositories/bible_repository.dart'; // Import the interface
+import '../../bible/domain/repositories/bible_repository.dart';
 import 'package:http/http.dart' as http;
 
 class BibleBinding extends Bindings {
@@ -17,7 +18,8 @@ class BibleBinding extends Bindings {
     // Provide repository implementation with injected API service
     Get.lazyPut<BibleRepository>(() => BibleRepositoryImpl(Get.find<BibleApiService>()));
 
-    // Provide controller with injected repository
+    // Provide controllers
     Get.lazyPut<BibleController>(() => BibleController(repository: Get.find<BibleRepository>()));
+    Get.lazyPut<AIController>(() => AIController());
   }
 }

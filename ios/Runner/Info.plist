@@ -45,5 +45,16 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>notes</string>
+		<string>mobilenotes</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app sends daily Bible verse notifications to help you stay connected with God's Word.</string>
 </dict>
 </plist>

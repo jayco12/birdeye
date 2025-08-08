@@ -1,6 +1,6 @@
 import '../../domain/entities/bible_book.dart';
 import '../../domain/entities/chapters.dart';
-import '../../domain/entities/verse.dart';
+import '../../domain/entities/verse.dart' hide Testament;
 import '../../domain/repositories/bible_repository.dart';
 import '../datasources/bible_api_service.dart';
 
@@ -102,5 +102,9 @@ Future<List<Verse>> searchVerses(String query, {String translation = 'KJV'}) {
   return remoteDataSource.fetchVerses(query, translation: translation);
 }
 
+@override
+Future<List<Verse>> getVerseByReference(String reference, String translation) {
+  return remoteDataSource.fetchVerses(reference, translation: translation);
+}
 
 }

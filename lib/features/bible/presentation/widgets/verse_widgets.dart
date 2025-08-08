@@ -9,11 +9,11 @@ class VerseWidget extends StatelessWidget {
   final VerseTapCallback? onTap;
 
   const VerseWidget({
-    Key? key,
+    super.key,
     required this.verse,
     this.isHighlighted = false,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

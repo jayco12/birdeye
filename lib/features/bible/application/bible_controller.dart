@@ -1,10 +1,11 @@
-import 'dart:math' show Random;
 
 import 'package:get/get.dart';
 import '../domain/entities/bible_book.dart';
 import '../domain/entities/chapters.dart';
 import '../domain/entities/verse.dart';
 import '../domain/repositories/bible_repository.dart';
+import '../data/datasources/local_storage.dart';
+import '../data/models/verse_model.dart';
 
 class BibleController extends GetxController {
   final BibleRepository repository;
@@ -16,30 +17,36 @@ class BibleController extends GetxController {
   var chapters = <Chapter>[].obs;
   var selectedChapter = Rxn<Chapter>();
   var verses = <Verse>[].obs;
-var selectedTranslation = 'KJV'.obs;
+  var selectedTranslation = 'KJV'.obs;
   var isLoading = false.obs;
   var error = ''.obs;
-var verseOfTheDay = Rx<VerseModel?>(null);
+  
+  // Bible comparison features
+  var selectedTranslationsForComparison = <String>['KJV', 'NIV'].obs;
+  var comparisonVerses = <Verse>[].obs;
+  
+  // Bookmarks and notes
+  var bookmarkedVerses = <Verse>[].obs;
+  final LocalStorage _localStorage = LocalStorage();
+
   @override
   void onInit() {
     super.onInit();
     loadBooks();
+    _loadBookmarks();
   }
+
+  Future<void> _loadBookmarks() async {
+    final bookmarks = await _localStorage.getBookmarks();
+    bookmarkedVerses.assignAll(bookmarks);
+  }
+
 void setTranslation(String newTranslation) {
   selectedTranslation.value = newTranslation;
   // Optionally reload verses using new translation
   if (selectedBook.value != null && selectedChapter.value != null) {
     loadVerses(selectedBook.value!.abbreviation, selectedChapter.value!.chapterNumber);
   }
-}
-void loadVerseOfTheDay() {
-  final random = Random();
-  final randomBook = bibleBooks[random.nextInt(bibleBooks.length)];
-  final randomChapter = random.nextInt(randomBook.chapters.length);
-  final verses = randomBook.chapters[randomChapter];
-  final randomVerse = verses[random.nextInt(verses.length)];
-
-  verseOfTheDay.value = randomVerse;
 }
 
   Future<void> loadBooks() async {
@@ -173,5 +180,52 @@ Future<void> searchVerses(String input) async {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Bible comparison methods
+  void addTranslationToComparison(String translation) {
+    if (!selectedTranslationsForComparison.contains(translation)) {
+      selectedTranslationsForComparison.add(translation);
+    }
+  }
+
+  void removeTranslationFromComparison(String translation) {
+    selectedTranslationsForComparison.remove(translation);
+  }
+
+  Future<void> loadVerseForComparison(String reference) async {
+    try {
+      comparisonVerses.clear();
+      for (String translation in selectedTranslationsForComparison) {
+        // Load verse for each translation
+        final verses = await repository.getVerseByReference(reference, translation);
+        if (verses.isNotEmpty) {
+          comparisonVerses.add(verses.first);
+        }
+      }
+    } catch (e) {
+      error.value = 'Failed to load comparison: ${e.toString()}';
+    }
+  }
+
+  // Bookmark methods
+  void toggleBookmark(Verse verse) async {
+    if (isBookmarked(verse)) {
+      bookmarkedVerses.removeWhere((v) => _isSameVerse(v, verse));
+    } else {
+      bookmarkedVerses.add(verse);
+    }
+    await _localStorage.saveBookmarks(bookmarkedVerses.cast<VerseModel>());
+  }
+
+  bool isBookmarked(Verse verse) {
+    return bookmarkedVerses.any((v) => _isSameVerse(v, verse));
+  }
+
+  bool _isSameVerse(Verse v1, Verse v2) {
+    return v1.bookAbbreviation == v2.bookAbbreviation &&
+           v1.chapterNumber == v2.chapterNumber &&
+           v1.verseNumber == v2.verseNumber &&
+           v1.translation == v2.translation;
   }
 }
