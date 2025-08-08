@@ -193,7 +193,7 @@ class _ApologeticsResourcesScreenState extends State<ApologeticsResourcesScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.video_library, size: 64, color: AppColors.textSecondary),
+              const Icon(Icons.video_library, size: 64, color: AppColors.textSecondary),
               const SizedBox(height: 16),
               Text(
                 'No resources found',

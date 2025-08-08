@@ -70,7 +70,7 @@ class VerseOfDayCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.lightbulb_outline,
                   color: AppColors.primary,
                   size: 16,

@@ -170,7 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.format_size, color: AppColors.primary, size: 20),
+              const Icon(Icons.format_size, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Font Size',
@@ -252,7 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(Icons.translate, color: AppColors.primary, size: 20),
+          const Icon(Icons.translate, color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -322,7 +322,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.arrow_forward_ios,
             color: AppColors.textSecondary,
             size: 16,

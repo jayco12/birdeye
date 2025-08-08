@@ -54,7 +54,7 @@ class VerseVideosScreen extends StatelessWidget {
                           .animate(delay: (index * 100).ms)
                           .fadeIn(duration: 600.ms)
                           .slideX(begin: 0.3);
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -137,7 +137,7 @@ class VerseVideosScreen extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.play_circle_filled,
             color: AppColors.error,
             size: 24,

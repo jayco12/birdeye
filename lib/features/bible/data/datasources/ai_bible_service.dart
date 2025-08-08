@@ -3,7 +3,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../domain/entities/verse.dart';
 
 class AIBibleService {
-  static const String _apiKey = 'AIzaSyDmSRpBqrpOwAVKZogqZV7V2i_024VSaqM'; // Replace with actual key
+  static const String _apiKey = ''; // Replace with actual key
   late final GenerativeModel _model;
   
   AIBibleService() {

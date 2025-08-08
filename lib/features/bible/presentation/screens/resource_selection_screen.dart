@@ -63,7 +63,7 @@ class ResourceSelectionScreen extends StatelessWidget {
                           .animate(delay: (index * 100).ms)
                           .fadeIn(duration: 600.ms)
                           .slideX(begin: 0.3);
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -144,7 +144,7 @@ class ResourceSelectionScreen extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.open_in_new,
             color: AppColors.textSecondary,
             size: 20,

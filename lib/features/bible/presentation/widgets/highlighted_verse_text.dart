@@ -138,7 +138,7 @@ class HighlightedVerseText extends StatelessWidget {
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.format_color_fill, color: Colors.black54),
+                    child: const Icon(Icons.format_color_fill, color: Colors.black54),
                   ),
                 );
               }).toList(),

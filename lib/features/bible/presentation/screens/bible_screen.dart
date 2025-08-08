@@ -431,7 +431,7 @@ class BibleScreen extends GetView<BibleController> {
     return GlassCard(
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             size: 48,
             color: AppColors.error,
@@ -456,7 +456,7 @@ class BibleScreen extends GetView<BibleController> {
     return GlassCard(
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.search_off,
             size: 48,
             color: AppColors.textTertiary,
@@ -544,7 +544,9 @@ class BibleScreen extends GetView<BibleController> {
             baseStyle: AppTextStyles.verseText,
           ),
           const SizedBox(height: 7),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildActionButton(
                 icon: Icons.note_add,
@@ -556,7 +558,6 @@ class BibleScreen extends GetView<BibleController> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               Obx(() => _buildActionButton(
                 icon: controller.isBookmarked(verse) 
                     ? Icons.bookmark 
@@ -565,7 +566,6 @@ class BibleScreen extends GetView<BibleController> {
                 isActive: controller.isBookmarked(verse),
                 onPressed: () => controller.toggleBookmark(verse),
               )),
-              const SizedBox(width: 8),
               _buildActionButton(
                 icon: Icons.build,
                 label: 'Tools',
@@ -576,7 +576,6 @@ class BibleScreen extends GetView<BibleController> {
                   ),
                 ),
               ),
-              const Spacer(),
               _buildActionButton(
                 icon: Icons.share,
                 label: 'Share',

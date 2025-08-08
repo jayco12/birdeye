@@ -119,12 +119,15 @@ class AnimatedGradientButton extends StatelessWidget {
                   Icon(icon, color: Colors.white, size: 15),
                 if ((icon != null && !isLoading) || isLoading)
                   const SizedBox(width: 5),
-                Text(
-                  text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                Flexible(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

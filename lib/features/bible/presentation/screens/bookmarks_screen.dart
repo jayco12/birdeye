@@ -162,7 +162,7 @@ class BookmarksScreen extends GetView<BibleController> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.translate, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.translate, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 verse.translation,
@@ -171,7 +171,7 @@ class BookmarksScreen extends GetView<BibleController> {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSecondary),
             ],
           ),
         ],

@@ -190,7 +190,7 @@ class AllNotesScreen extends GetView<NotesController> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 _formatDate(note.createdAt),
@@ -257,7 +257,7 @@ class AllNotesScreen extends GetView<NotesController> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 _formatDate(highlight.createdAt),

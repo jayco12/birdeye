@@ -49,7 +49,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
               Container(
                 width: 200,
                 height: 200,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                 ),

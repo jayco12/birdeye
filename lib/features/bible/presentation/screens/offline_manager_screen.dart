@@ -116,7 +116,7 @@ class OfflineManagerScreen extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: controller.storageUsed.value / 100,
                 backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             ),
           ),
@@ -242,7 +242,7 @@ class OfflineManagerScreen extends StatelessWidget {
                 .fadeIn(duration: 600.ms)
                 .slideX(begin: 0.3);
           });
-        }).toList(),
+        }),
       ],
     );
   }

@@ -157,7 +157,7 @@ class _StrongsDetailScreenState extends State<StrongsDetailScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.book, size: 16, color: AppColors.textSecondary),
+              const Icon(Icons.book, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 'From ${widget.verse.bookName} ${widget.verse.chapterNumber}:${widget.verse.verseNumber}',

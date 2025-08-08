@@ -91,7 +91,7 @@ class BibleComparisonScreen extends GetView<BibleController> {
   Widget _buildTranslationTabs() {
     return Obx(() {
       final translations = controller.selectedTranslationsForComparison;
-      return Container(
+      return SizedBox(
         height: 50,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
@@ -117,7 +117,7 @@ class BibleComparisonScreen extends GetView<BibleController> {
     return Obx(() {
       final verses = controller.comparisonVerses;
       if (verses.isEmpty) {
-        return Container(
+        return SizedBox(
           height: 300,
           child: Center(
             child: Column(
@@ -125,7 +125,7 @@ class BibleComparisonScreen extends GetView<BibleController> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,
                   ),

@@ -153,11 +153,11 @@ class VerseModel extends Verse {
         });
         
         if (strongsNum != null) {
-          strongNumbers!.add('${strongsType ?? 'H'}$strongsNum');
+          strongNumbers.add('${strongsType ?? 'H'}$strongsNum');
         }
       }
       
-      if (strongNumbers!.isEmpty) strongNumbers = null;
+      if (strongNumbers.isEmpty) strongNumbers = null;
       text = phraseData.map((p) => p['text']).join('');
     }
 

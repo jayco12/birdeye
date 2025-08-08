@@ -101,7 +101,7 @@ class VerseOfDayModal extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.lightbulb_outline,
                 color: AppColors.primary,
                 size: 20,

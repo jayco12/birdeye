@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApologeticsService {
-  static const String _youtubeApiKey = 'AIzaSyD-JvPJfe9CkfXHobCt3o1QGaBXMgiIuoo';
+  static const String _youtubeApiKey = '';
   static const String _youtubeBaseUrl = 'https://www.googleapis.com/youtube/v3';
   
   Future<List<ApologeticsResource>> searchResources(String topic) async {

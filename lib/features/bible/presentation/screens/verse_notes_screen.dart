@@ -141,7 +141,7 @@ class VerseNotesScreen extends StatelessWidget {
       final highlights = notesController.getHighlightsForVerse(verse.reference);
 
       if (notes.isEmpty && highlights.isEmpty) {
-        return Container(
+        return SizedBox(
           height: 200,
           child: Center(
             child: Column(
@@ -149,7 +149,7 @@ class VerseNotesScreen extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,
                   ),

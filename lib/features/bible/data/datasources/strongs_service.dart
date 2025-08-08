@@ -63,7 +63,7 @@ class StrongsService {
       // Use verse text as fallback
       englishVerse ??= verse.text;
       
-      if (hebrewVerse != null && englishVerse != null) {
+      if (hebrewVerse != null) {
         final hebrewWords = hebrewVerse.split(' ');
         final englishWords = englishVerse.split(' ');
         

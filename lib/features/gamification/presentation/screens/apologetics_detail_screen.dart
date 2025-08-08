@@ -103,7 +103,7 @@ class ApologeticsDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ),
     );
@@ -214,7 +214,7 @@ class ApologeticsDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-          )).toList(),
+          )),
         ],
       ),
     );

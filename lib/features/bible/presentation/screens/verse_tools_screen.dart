@@ -93,7 +93,7 @@ class VerseToolsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.translate, size: 16, color: AppColors.textSecondary),
+              const Icon(Icons.translate, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 verse.translation,

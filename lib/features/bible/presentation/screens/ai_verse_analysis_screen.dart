@@ -219,7 +219,7 @@ class AIVerseAnalysisScreen extends StatelessWidget {
                 text: entry.value,
                 accentColor: AppColors.secondary,
               );
-            }).toList(),
+            }),
           ],
         ),
       );
@@ -344,7 +344,7 @@ class AIVerseAnalysisScreen extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       );
