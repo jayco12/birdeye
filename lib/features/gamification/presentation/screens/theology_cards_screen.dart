@@ -90,8 +90,12 @@ class _TheologyCardsScreenState extends State<TheologyCardsScreen> {
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: FlexibleSpaceBar(
           title: Text(
-            'Theology Cards - ${_currentDifficulty.toUpperCase()}',
-            style: AppTextStyles.headingMedium.copyWith(color: Colors.white),
+            'Theological Cards - ${_currentDifficulty.toUpperCase()}',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
           centerTitle: true,
         ),
@@ -205,6 +209,7 @@ class _TheologyCardsScreenState extends State<TheologyCardsScreen> {
           Text(
             card['question'],
             style: AppTextStyles.headingSmall,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           ...List.generate(4, (index) {

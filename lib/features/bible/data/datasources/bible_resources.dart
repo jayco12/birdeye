@@ -61,13 +61,7 @@ class BibleResources {
       description: 'Parallel passages and context',
     ),
     
-    // Theological Resources
-    BibleResource(
-      name: 'BibleHub Topical',
-      baseUrl: 'https://biblehub.com/topical',
-      type: ResourceType.theological,
-      description: 'Theological themes and topics',
-    ),
+
     
     // Miscellaneous Aid Resources
     BibleResource(
@@ -107,9 +101,10 @@ class BibleResources {
       case 'BibleHub Interlinear':
       case 'BibleHub Strongs':
       case 'BibleHub Context':
-      case 'BibleHub Topical':
       case 'BibleHub Early Fathers':
         return '${resource.baseUrl}/$reference.htm';
+        
+
         
       case 'Blue Letter Bible Commentary':
         return '${resource.baseUrl}/${_getBlbBookCode(verse.bookName)}/${verse.chapterNumber}/${verse.verseNumber}/t_comms_${_getBlbVerseId(verse)}';
@@ -121,6 +116,9 @@ class BibleResources {
         
       case 'StudyLight':
         return '${resource.baseUrl}/${verse.bookName.toLowerCase()}/${verse.chapterNumber}-${verse.verseNumber}.html';
+        
+      case 'BibleHub Topical':
+        return 'https://biblehub.com/topical/${_formatReference(verse, resource)}.htm';
         
       default:
         return resource.baseUrl;

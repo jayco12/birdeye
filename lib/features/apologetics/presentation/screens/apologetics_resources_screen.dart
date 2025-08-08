@@ -250,19 +250,33 @@ class _ApologeticsResourcesScreenState extends State<ApologeticsResourcesScreen>
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              resource.thumbnailUrl,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 200,
-                  color: AppColors.surface,
-                  child: Icon(getResourceIcon(), size: 64),
-                );
-              },
-            ),
+            child: resource.thumbnailUrl.isNotEmpty
+                ? Image.network(
+                    resource.thumbnailUrl,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [_getTypeColor(resource.type).withOpacity(0.3), _getTypeColor(resource.type).withOpacity(0.1)],
+                          ),
+                        ),
+                        child: Icon(getResourceIcon(), size: 64, color: _getTypeColor(resource.type)),
+                      );
+                    },
+                  )
+                : Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [_getTypeColor(resource.type).withOpacity(0.3), _getTypeColor(resource.type).withOpacity(0.1)],
+                      ),
+                    ),
+                    child: Icon(getResourceIcon(), size: 64, color: _getTypeColor(resource.type)),
+                  ),
           ),
           const SizedBox(height: 12),
           Row(

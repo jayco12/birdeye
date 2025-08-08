@@ -1,12 +1,14 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
 import '../../../../core/global_widgets/reusable_components.dart';
-import '../../application/ai_controller.dart';
+import '../../application/scholarly_controller.dart';
 import '../../domain/entities/verse.dart';
 
 class AIVerseAnalysisScreen extends StatelessWidget {
@@ -16,7 +18,8 @@ class AIVerseAnalysisScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final aiController = Get.put(AIController());
+    final controller = Get.put(ScholarlyController());
+    controller.loadVerseAnalysis(verse);
     
     return Scaffold(
       body: Container(
@@ -32,15 +35,11 @@ class AIVerseAnalysisScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   _buildVerseCard(),
                   const SizedBox(height: 20),
-                  _buildAIFeatureGrid(aiController),
+                  _buildAnalysisSection(controller),
                   const SizedBox(height: 20),
-                  _buildInsightSection(aiController),
+                  _buildQuestionsSection(controller),
                   const SizedBox(height: 20),
-                  _buildQuestionsSection(aiController),
-                  const SizedBox(height: 20),
-                  _buildWordAnalysisSection(aiController),
-                  const SizedBox(height: 20),
-                  _buildDevotionalSection(aiController),
+                  _buildWebViewSection(controller),
                   const SizedBox(height: 100),
                 ]),
               ),
@@ -64,7 +63,7 @@ class AIVerseAnalysisScreen extends StatelessWidget {
         ),
         child: FlexibleSpaceBar(
           title: Text(
-            'Bible Study Insight',
+            'Scholarly Analysis',
             style: AppTextStyles.headingMedium.copyWith(color: Colors.white),
           ),
           centerTitle: true,
@@ -82,92 +81,35 @@ class AIVerseAnalysisScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              ReferenceChip(
-                text: '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}',
-                gradient: AppColors.secondaryGradient,
-              ),
-              const Spacer(),
-              const PulsingDot(color: AppColors.tertiary),
-            ],
+          Text(
+            '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}',
+            style: AppTextStyles.headingSmall.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             verse.text,
-            style: AppTextStyles.verseText,
+            style: AppTextStyles.bodyMedium.copyWith(
+              height: 1.4,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAIFeatureGrid(AIController aiController) {
-    final features = [
-      {
-        'title': 'Insights',
-        'icon': Icons.psychology,
-        'color': AppColors.primary,
-        'action': () => aiController.generateVerseInsight(verse),
-      },
-      {
-        'title': 'Study Questions',
-        'icon': Icons.quiz,
-        'color': AppColors.secondary,
-        'action': () => aiController.generateStudyQuestions(verse),
-      },
-   
-      {
-        'title': 'Word Analysis',
-        'icon': Icons.translate,
-        'color': AppColors.accent,
-        'action': () => aiController.generateWordAnalysis(verse),
-      },
-    ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: features.length,
-      itemBuilder: (context, index) {
-        final feature = features[index];
-        return GlassCard(
-          onTap: feature['action'] as VoidCallback,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FeatureIcon(
-                icon: feature['icon'] as IconData,
-                color: feature['color'] as Color,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                feature['title'] as String,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildInsightSection(AIController aiController) {
+  Widget _buildAnalysisSection(ScholarlyController controller) {
     return Obx(() {
-      if (aiController.isGeneratingInsight.value) {
-        return _buildLoadingCard('loading...');
+      if (controller.isLoadingAnalysis.value) {
+        return _buildLoadingCard('Loading scholarly analysis...');
       }
       
-      if (aiController.currentInsight.value.isEmpty) {
+      if (controller.currentAnalysis.value.isEmpty) {
         return const SizedBox.shrink();
       }
 
@@ -175,16 +117,22 @@ class AIVerseAnalysisScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(
-              icon: Icons.psychology,
-              title: 'Insights',
-              iconColor: AppColors.primary,
-              onClose: () => aiController.clearCurrentInsight(),
+            Row(
+              children: [
+                const Icon(Icons.school, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Scholarly Analysis',
+                  style: AppTextStyles.headingSmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
-              aiController.currentInsight.value,
-              style: AppTextStyles.aiInsightBody,
+              controller.currentAnalysis.value,
+              style: AppTextStyles.bodyMedium.copyWith(height: 1.4),
             ),
           ],
         ),
@@ -192,13 +140,9 @@ class AIVerseAnalysisScreen extends StatelessWidget {
     });
   }
 
-  Widget _buildQuestionsSection(AIController aiController) {
+  Widget _buildQuestionsSection(ScholarlyController controller) {
     return Obx(() {
-      if (aiController.isGeneratingQuestions.value) {
-        return _buildLoadingCard('Generating study questions...');
-      }
-      
-      if (aiController.currentQuestions.isEmpty) {
+      if (controller.currentQuestions.isEmpty) {
         return const SizedBox.shrink();
       }
 
@@ -206,18 +150,51 @@ class AIVerseAnalysisScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(
-              icon: Icons.quiz,
-              title: 'Study Questions',
-              iconColor: AppColors.secondary,
-              onClose: () => aiController.clearCurrentQuestions(),
+            Row(
+              children: [
+                const Icon(Icons.quiz, color: AppColors.secondary),
+                const SizedBox(width: 8),
+                Text(
+                  'Study Questions',
+                  style: AppTextStyles.headingSmall.copyWith(
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            ...aiController.currentQuestions.asMap().entries.map((entry) {
-              return NumberedListItem(
-                number: entry.key + 1,
-                text: entry.value,
-                accentColor: AppColors.secondary,
+            ...controller.currentQuestions.asMap().entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        color: AppColors.secondary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${entry.key + 1}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        entry.value,
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
               );
             }),
           ],
@@ -226,13 +203,9 @@ class AIVerseAnalysisScreen extends StatelessWidget {
     });
   }
 
-  Widget _buildDevotionalSection(AIController aiController) {
+  Widget _buildWebViewSection(ScholarlyController controller) {
     return Obx(() {
-      if (aiController.isGeneratingDevotional.value) {
-        return _buildLoadingCard('Creating personal devotional...');
-      }
-      
-      if (aiController.currentDevotional.value.isEmpty) {
+      if (controller.studyUrl.value.isEmpty) {
         return const SizedBox.shrink();
       }
 
@@ -240,19 +213,48 @@ class AIVerseAnalysisScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SectionHeader(
-              icon: Icons.favorite,
-              title: 'Personal Devotional',
-              iconColor: AppColors.tertiary,
-              onClose: () => aiController.clearCurrentDevotional(),
+            Row(
+              children: [
+                const Icon(Icons.web, color: AppColors.accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Full Study Resource',
+                  style: AppTextStyles.headingSmall.copyWith(
+                    color: AppColors.accent,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            MarkdownBody(
-              data: aiController.currentDevotional.value,
-              styleSheet: MarkdownStyleSheet(
-                p: AppTextStyles.aiInsightBody,
-                h1: AppTextStyles.headingSmall,
-                h2: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+            Container(
+              height: 400,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: WebViewWidget(
+                  controller: WebViewController()
+                    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                    ..setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15')
+                    ..enableZoom(true)
+                    ..setNavigationDelegate(NavigationDelegate(
+                      onNavigationRequest: (request) => NavigationDecision.navigate,
+                    ))
+                    ..loadRequest(Uri.parse(controller.studyUrl.value)),
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<VerticalDragGestureRecognizer>(
+                      () => VerticalDragGestureRecognizer(),
+                    ),
+                    Factory<HorizontalDragGestureRecognizer>(
+                      () => HorizontalDragGestureRecognizer(),
+                    ),
+                    Factory<PanGestureRecognizer>(
+                      () => PanGestureRecognizer(),
+                    ),
+                  },
+                ),
               ),
             ),
           ],
@@ -279,75 +281,5 @@ class AIVerseAnalysisScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWordAnalysisSection(AIController aiController) {
-    return Obx(() {
-      if (aiController.isGeneratingWordAnalysis.value) {
-        return _buildLoadingCard('Analyzing original language words...');
-      }
-      
-      if (aiController.currentWordAnalysis.isEmpty) {
-        return const SizedBox.shrink();
-      }
 
-      return GlassCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionHeader(
-              icon: Icons.translate,
-              title: 'Word Analysis',
-              iconColor: AppColors.accent,
-              onClose: () => aiController.clearCurrentWordAnalysis(),
-            ),
-            const SizedBox(height: 12),
-            ...aiController.currentWordAnalysis.asMap().entries.map((entry) {
-              final word = entry.value;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          word['word'] ?? '',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '(${word['original'] ?? ''})',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      word['analysis'] ?? '',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      );
-    });
-  }
 }

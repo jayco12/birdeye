@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../models/verse_model.dart';
+import '../../../../core/config/api_keys.dart';
 
 class VerseOfDayService {
   static const String baseUrl = 'https://biblesdk.com';
-  static const String geminiApiKey = 'AIzaSyDhvYjjCg_JiwV7ZRch-Akaf2BLdIk8lG4';
   
   static const Map<String, int> bibleBooks = {
     'GEN': 50, 'EXO': 40, 'LEV': 27, 'NUM': 36, 'DEU': 34,
@@ -97,7 +97,7 @@ Focus on:
 - Practical application for daily life
 - Encouragement or wisdom for today''';
 
-      final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$geminiApiKey');
+      final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${ApiKeys.geminiApiKey}');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

@@ -144,18 +144,45 @@ Future<void> searchVerses(String input) async {
     error.value = '';
     verses.clear();
 
-    // Regex to detect book chapter:verse pattern (e.g. John 3:16)
-    final regex = RegExp(r'^(.+?)\s+(\d+):(\d+)$');
-    final match = regex.firstMatch(input.trim());
+    final trimmedInput = input.trim();
+    if (trimmedInput.isEmpty) {
+      error.value = 'Please enter a search term';
+      return;
+    }
 
-    if (match != null) {
-      // Specific verse reference
-      await loadVersesByReference(input);
+    // Show immediate feedback
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Regex to detect book chapter:verse pattern (e.g. John 3:16)
+    final verseRefRegex = RegExp(r'^(.+?)\s+(\d+):(\d+)$');
+    final chapterRefRegex = RegExp(r'^(.+?)\s+(\d+)$');
+    
+    if (verseRefRegex.hasMatch(trimmedInput)) {
+      // Specific verse reference (e.g., "John 3:16")
+      await loadVersesByReference(trimmedInput);
+    } else if (chapterRefRegex.hasMatch(trimmedInput)) {
+      // Chapter reference (e.g., "John 3")
+      final match = chapterRefRegex.firstMatch(trimmedInput)!;
+      final bookName = match.group(1)!.trim();
+      final chapterNum = int.tryParse(match.group(2)!);
+      
+      if (chapterNum != null) {
+        final book = books.firstWhereOrNull((b) =>
+          b.name.toLowerCase().contains(bookName.toLowerCase()) ||
+          b.abbreviation.toLowerCase() == bookName.toLowerCase()
+        );
+        
+        if (book != null) {
+          await loadVerses(book.abbreviation, chapterNum);
+        } else {
+          error.value = 'Book not found: $bookName';
+        }
+      }
     } else {
-      // Keyword search for random words
-      final results = await repository.searchVerses(input);
+      // Keyword/phrase search with optimization
+      final results = await _performOptimizedSearch(trimmedInput);
       if (results.isEmpty) {
-        error.value = 'No verses found for "$input"';
+        error.value = 'No verses found for "$trimmedInput"';
       } else {
         verses.assignAll(results);
       }
@@ -165,6 +192,20 @@ Future<void> searchVerses(String input) async {
   } finally {
     isLoading.value = false;
   }
+}
+
+Future<List<Verse>> _performOptimizedSearch(String query) async {
+  // Use a timeout to prevent long searches
+  return await repository.searchVerses(
+    query, 
+    translation: selectedTranslation.value,
+    limit: 50, // Limit results for faster loading
+  ).timeout(
+    const Duration(seconds: 10),
+    onTimeout: () {
+      throw Exception('Search timeout - please try a more specific query');
+    },
+  );
 }
 
 

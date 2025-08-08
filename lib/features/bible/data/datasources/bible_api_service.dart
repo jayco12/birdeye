@@ -159,22 +159,64 @@ class BibleApiService {
   }
 
   Future<List<VerseModel>> _searchVerses(String query, String translation) async {
-    final url = Uri.parse('$baseUrl/api/search?query=${Uri.encodeComponent(query)}&concordance=true');
-    print('🔍 Searching verses from: $url');
-    final response = await client.get(url);
-    print('📊 Search response status: ${response.statusCode}');
-    print('📄 Search response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['results'] != null) {
-        final results = data['results'] as List;
-        return results
-            .map((r) => VerseModel.fromBibleSdkSearch(r as Map<String, dynamic>, translation))
-            .toList();
+    try {
+      // Try multiple search approaches for better results
+      final results = <VerseModel>[];
+      
+      // 1. Direct search
+      final directUrl = Uri.parse('$baseUrl/api/search?query=${Uri.encodeComponent(query)}&concordance=true');
+      print('🔍 Direct search from: $directUrl');
+      final directResponse = await client.get(directUrl);
+      
+      if (directResponse.statusCode == 200) {
+        final data = jsonDecode(directResponse.body);
+        if (data['results'] != null) {
+          final directResults = data['results'] as List;
+          results.addAll(directResults
+              .map((r) => VerseModel.fromBibleSdkSearch(r as Map<String, dynamic>, translation))
+              .toList());
+        }
       }
+      
+      // 2. If phrase search, try individual words
+      if (results.isEmpty && query.contains(' ')) {
+        final words = query.split(' ').where((w) => w.length > 2).toList();
+        for (final word in words.take(3)) { // Limit to first 3 words
+          final wordUrl = Uri.parse('$baseUrl/api/search?query=${Uri.encodeComponent(word)}&concordance=true');
+          print('🔍 Word search for "$word" from: $wordUrl');
+          final wordResponse = await client.get(wordUrl);
+          
+          if (wordResponse.statusCode == 200) {
+            final wordData = jsonDecode(wordResponse.body);
+            if (wordData['results'] != null) {
+              final wordResults = wordData['results'] as List;
+              final wordVerses = wordResults
+                  .map((r) => VerseModel.fromBibleSdkSearch(r as Map<String, dynamic>, translation))
+                  .where((v) => v.text.toLowerCase().contains(query.toLowerCase()))
+                  .toList();
+              
+              // Add unique results
+              for (final verse in wordVerses) {
+                final isDuplicate = results.any((existing) => 
+                  existing.bookAbbreviation == verse.bookAbbreviation &&
+                  existing.chapterNumber == verse.chapterNumber &&
+                  existing.verseNumber == verse.verseNumber
+                );
+                if (!isDuplicate) {
+                  results.add(verse);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      print('📊 Total search results: ${results.length}');
+      return results;
+    } catch (e) {
+      print('❌ Search error: $e');
+      return [];
     }
-    return [];
   }
 
   Future<List<String>> getAvailableTranslations() async {

@@ -3,15 +3,26 @@ import '../../domain/entities/chapters.dart';
 import '../../domain/entities/verse.dart' hide Testament;
 import '../../domain/repositories/bible_repository.dart';
 import '../datasources/bible_api_service.dart';
+import '../datasources/offline_cache_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class BibleRepositoryImpl implements BibleRepository {
   final BibleApiService remoteDataSource;
+  final OfflineCacheService cacheService = OfflineCacheService();
 
   BibleRepositoryImpl(this.remoteDataSource);
 
   @override
   Future<List<BibleBook>> getBooks() async {
-   return [
+    try {
+      // Try cache first
+      final cachedBooks = await cacheService.getCachedBooks();
+      if (cachedBooks.isNotEmpty) {
+        return cachedBooks;
+      }
+      
+      // Fallback to hardcoded list
+      return [
   BibleBook(name: "Genesis", abbreviation: "Gen", chaptersCount: 50, testament: Testament.old, order: 1),
   BibleBook(name: "Exodus", abbreviation: "Exod", chaptersCount: 40, testament: Testament.old, order: 2),
   BibleBook(name: "Leviticus", abbreviation: "Lev", chaptersCount: 27, testament: Testament.old, order: 3),
@@ -79,32 +90,125 @@ class BibleRepositoryImpl implements BibleRepository {
   BibleBook(name: "Jude", abbreviation: "Jude", chaptersCount: 1, testament: Testament.newTestament, order: 65),
   BibleBook(name: "Revelation", abbreviation: "Rev", chaptersCount: 22, testament: Testament.newTestament, order: 66),
 ];
+    } catch (e) {
+      throw Exception('Failed to get books: $e');
+    }
   }
 
   @override
   Future<List<Chapter>> getChapters(String bookAbbreviation) async {
-    // Chapters are usually sequential; we can generate them using book info
-    final books = await getBooks();
-    final book = books.firstWhere((b) => b.abbreviation == bookAbbreviation);
-    return List.generate(
-      book.chaptersCount,
-      (index) => Chapter(bookAbbreviation: bookAbbreviation, chapterNumber: index + 1, versesCount: 0), // versesCount can be fetched later
-    );
+    try {
+      // Try cache first
+      final cachedChapters = await cacheService.getCachedChapters(bookAbbreviation);
+      if (cachedChapters.isNotEmpty) {
+        return cachedChapters;
+      }
+      
+      // Fallback to generating from book info
+      final books = await getBooks();
+      final book = books.firstWhere((b) => b.abbreviation == bookAbbreviation);
+      return List.generate(
+        book.chaptersCount,
+        (index) => Chapter(bookAbbreviation: bookAbbreviation, chapterNumber: index + 1, versesCount: 0),
+      );
+    } catch (e) {
+      throw Exception('Failed to get chapters: $e');
+    }
   }
 
-@override
-Future<List<Verse>> getVerses(String bookAbbreviation, int chapterNumber, {String translation = 'KJV'}) {
-  return remoteDataSource.fetchVerses('$bookAbbreviation $chapterNumber', translation: translation);
-}
+  @override
+  Future<List<Verse>> getVerses(String bookAbbreviation, int chapterNumber, {String translation = 'KJV'}) async {
+    try {
+      // Try cache first
+      final cachedVerses = await cacheService.getCachedVerses(bookAbbreviation, chapterNumber, translation);
+      if (cachedVerses.isNotEmpty) {
+        return cachedVerses;
+      }
+      
+      // Check connectivity
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity == ConnectivityResult.none) {
+        throw Exception('No internet connection and no cached data available');
+      }
+      
+      // Fetch from API and cache
+      final verses = await remoteDataSource.fetchVerses('$bookAbbreviation $chapterNumber', translation: translation);
+      await cacheService.cacheVerses(verses.cast());
+      return verses;
+    } catch (e) {
+      throw Exception('Failed to get verses: $e');
+    }
+  }
 
-@override
-Future<List<Verse>> searchVerses(String query, {String translation = 'KJV'}) {
-  return remoteDataSource.fetchVerses(query, translation: translation);
-}
+  @override
+  Future<List<Verse>> searchVerses(String query, {String translation = 'KJV', int? limit}) async {
+    try {
+      final results = <Verse>[];
+      
+      // Try cache first for faster results
+      final cachedResults = await cacheService.searchCachedVerses(query, translation);
+      if (cachedResults.isNotEmpty) {
+        results.addAll(cachedResults);
+        // Apply limit to cached results if specified
+        if (limit != null && results.length > limit) {
+          return results.take(limit).toList();
+        }
+      }
+      
+      // Check connectivity for API search
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity != ConnectivityResult.none && results.length < (limit ?? 50)) {
+        try {
+          // Fetch from API with remaining limit
+          final remainingLimit = limit != null ? limit - results.length : null;
+          final apiResults = await remoteDataSource.fetchVerses(
+            query, 
+            translation: translation,
+          );
+          
+          // Merge results, avoiding duplicates
+          for (final apiVerse in apiResults) {
+            final isDuplicate = results.any((cachedVerse) => 
+              cachedVerse.bookAbbreviation == apiVerse.bookAbbreviation &&
+              cachedVerse.chapterNumber == apiVerse.chapterNumber &&
+              cachedVerse.verseNumber == apiVerse.verseNumber
+            );
+            if (!isDuplicate) {
+              results.add(apiVerse);
+              // Break if we've reached the limit
+              if (limit != null && results.length >= limit) break;
+            }
+          }
+        } catch (apiError) {
+          print('API search failed: $apiError');
+          // Continue with cached results if API fails
+        }
+      }
+      
+      if (results.isEmpty) {
+        throw Exception('No verses found for "$query"');
+      }
+      
+      // Apply final limit if specified
+      return limit != null ? results.take(limit).toList() : results;
+    } catch (e) {
+      throw Exception('Failed to search verses: $e');
+    }
+  }
 
-@override
-Future<List<Verse>> getVerseByReference(String reference, String translation) {
-  return remoteDataSource.fetchVerses(reference, translation: translation);
-}
+  @override
+  Future<List<Verse>> getVerseByReference(String reference, String translation) async {
+    try {
+      // Check connectivity
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity == ConnectivityResult.none) {
+        throw Exception('No internet connection');
+      }
+      
+      return await remoteDataSource.fetchVerses(reference, translation: translation);
+    } catch (e) {
+      throw Exception('Failed to get verse by reference: $e');
+    }
+  }
 
 }

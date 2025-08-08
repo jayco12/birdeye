@@ -119,7 +119,7 @@ class VerseToolsScreen extends StatelessWidget {
       ToolItem('Miscellaneous Aid', Icons.help_outline, ResourceType.miscellaneous, AppColors.primaryGradient),
       ToolItem('Early Church Fathers', Icons.church, ResourceType.earlyFathers, AppColors.accentGradient),
       ToolItem('Videos', Icons.play_circle, null, AppColors.errorGradient),
-      ToolItem('Theological Views', Icons.school, ResourceType.theological, AppColors.successGradient),
+
     ];
 
     return GridView.builder(

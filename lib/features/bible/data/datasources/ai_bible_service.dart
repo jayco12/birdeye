@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../domain/entities/verse.dart';
+import '../../../../core/config/api_keys.dart';
 
 class AIBibleService {
-  static const String _apiKey = ''; // Replace with actual key
   late final GenerativeModel _model;
   
   AIBibleService() {
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
-      apiKey: _apiKey,
+      apiKey: ApiKeys.geminiApiKey2,
     );
   }
 
