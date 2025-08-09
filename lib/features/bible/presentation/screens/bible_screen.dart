@@ -7,11 +7,11 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
 import '../../../../core/global_widgets/loading_states.dart';
 import '../../application/bible_controller.dart';
-import '../../application/ai_controller.dart';
 import '../../domain/entities/verse.dart';
 import 'bible_comparison_screen.dart';
 import 'offline_manager_screen.dart';
 import 'bookmarks_screen.dart';
+import 'search_results_screen.dart';
 import 'settings_screen.dart';
 import 'all_notes_screen.dart';
 import '../../application/notes_controller.dart';
@@ -24,9 +24,9 @@ import '../../../apologetics/presentation/screens/apologetics_resources_screen.d
 
 class BibleScreen extends GetView<BibleController> {
   BibleScreen({super.key});
-
+  final FocusNode searchFocusNode = FocusNode();
+ final RxString inputText = ''.obs;
   final TextEditingController verseInputController = TextEditingController();
-  final AIController aiController = Get.put(AIController());
   final RxMap<String, dynamic> verseOfDay = <String, dynamic>{}.obs;
 
 
@@ -511,6 +511,16 @@ class BibleScreen extends GetView<BibleController> {
     FocusScope.of(Get.context!).requestFocus(FocusNode());
   }
 
+  void clearInput() {
+    verseInputController.clear();
+    inputText.value = '';
+    _focusSearchField();
+  }
+
+  void goToSearchScreen(String query) {
+    // Optional: call controller.searchVerses(query);
+    Get.to(() => SearchResultsScreen(searchQuery: query));
+  }
 
 
   Widget _buildCompactTopSection() {
@@ -601,15 +611,31 @@ class BibleScreen extends GetView<BibleController> {
                     border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                   ),
                   child: TextField(
-                    controller: verseInputController,
-                    style: AppTextStyles.bodyMedium,
-                    decoration: InputDecoration(
-                      hintText: 'Search verse (e.g. John 3:16)',
-                      hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
-                      prefixIcon: const Icon(Icons.search, color: AppColors.primary, size: 18),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
+                      focusNode: searchFocusNode,
+                        controller: verseInputController,
+                        style: AppTextStyles.bodyMedium,
+                        decoration: InputDecoration(
+                          hintText: 'Search verse (e.g. John 3:16)',
+                          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                          prefixIcon: const Icon(Icons.search, color: AppColors.primary, size: 18),
+
+                          // Cancel button appears only when there is input
+                          suffixIcon: inputText.value.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: clearInput,
+                                  child: const Icon(Icons.cancel, color: AppColors.textTertiary),
+                                )
+                              : null,
+
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        onSubmitted: (value) {
+                          final trimmed = value.trim();
+                          if (trimmed.isNotEmpty) {
+                            goToSearchScreen(trimmed);
+                          }
+                        }
                   ),
                 ),
               ),
@@ -626,8 +652,10 @@ class BibleScreen extends GetView<BibleController> {
                     onTap: () {
                       final input = verseInputController.text.trim();
                       if (input.isNotEmpty) {
-                        controller.searchVerses(input);
-                      }
+                          goToSearchScreen(input);
+                        } else {
+                          _focusSearchField();
+                        }
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: const Padding(

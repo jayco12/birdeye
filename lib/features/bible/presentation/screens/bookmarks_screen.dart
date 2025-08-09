@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart';
 import '../../application/bible_controller.dart';
 import '../../domain/entities/verse.dart';
 import 'verse_tools_screen.dart';

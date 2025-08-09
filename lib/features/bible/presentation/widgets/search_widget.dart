@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/global_widgets/animated_widgets.dart';
 import '../../application/bible_controller.dart';
 import '../screens/search_results_screen.dart';
 

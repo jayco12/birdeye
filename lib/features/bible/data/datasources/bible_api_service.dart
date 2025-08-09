@@ -8,46 +8,53 @@ class BibleApiService {
 
   BibleApiService(this.client);
 
-  String _mapBookName(String input) {
-    final cleanInput = input.toUpperCase().replaceAll(' ', '');
-    
-    // If input is 4+ characters, try mapping first 4 chars to 3-char code
-    if (cleanInput.length >= 4) {
-      final first4 = cleanInput.substring(0, 4);
-      final first3 = cleanInput.substring(0, 3);
-      
-      // Check if first 4 chars map to a known book
-      final fourCharMap = {
-        'GENE': 'GEN', 'EXOD': 'EXO', 'LEVI': 'LEV', 'NUMB': 'NUM',
-        'DEUT': 'DEU', 'JOSH': 'JOS', 'JUDG': 'JDG', 'RUTH': 'RUT',
-        '1SAM': '1SA', '2SAM': '2SA', '1KIN': '1KI', '2KIN': '2KI',
-        '1CHR': '1CH', '2CHR': '2CH', 'EZRA': 'EZR', 'NEHE': 'NEH',
-        'ESTH': 'EST', 'PSAL': 'PSA', 'PROV': 'PRO', 'ECCL': 'ECC',
-        'SONG': 'SNG', 'ISAI': 'ISA', 'JERE': 'JER', 'LAME': 'LAM',
-        'EZEK': 'EZK', 'DANI': 'DAN', 'HOSE': 'HOS', 'JOEL': 'JOL',
-        'AMOS': 'AMO', 'OBAD': 'OBA', 'JONA': 'JON', 'MICA': 'MIC',
-        'NAHU': 'NAM', 'HABA': 'HAB', 'ZEPH': 'ZEP', 'HAGG': 'HAG',
-        'ZECH': 'ZEC', 'MALA': 'MAL', 'MATT': 'MAT', 'MARK': 'MRK',
-        'LUKE': 'LUK', 'JOHN': 'JHN', 'ACTS': 'ACT', 'ROMA': 'ROM',
-        '1COR': '1CO', '2COR': '2CO', 'GALA': 'GAL', 'EPHE': 'EPH',
-        'PHIL': 'PHP', 'COLO': 'COL', '1THE': '1TH', '2THE': '2TH',
-        '1TIM': '1TI', '2TIM': '2TI', 'TITU': 'TIT', 'PHILE': 'PHM',
-        'HEBR': 'HEB', 'JAME': 'JAS', '1PET': '1PE', '2PET': '2PE',
-        '1JOH': '1JN', '2JOH': '2JN', '3JOH': '3JN', 'JUDE': 'JUD',
-        'REVE': 'REV',
-      };
-      
-      if (fourCharMap.containsKey(first4)) {
-        return fourCharMap[first4]!;
-      }
-      
-      // If no 4-char match, return first 3 chars
-      return first3;
+ String _mapBookName(String input) {
+  final cleanInput = input.toUpperCase().replaceAll(' ', '');
+
+  final fourCharMap = {
+    'GENE': 'GEN', 'EXOD': 'EXO', 'LEVI': 'LEV', 'NUMB': 'NUM',
+    'DEUT': 'DEU', 'JOSH': 'JOS', 'JUDG': 'JDG', 'RUTH': 'RUT',
+    '1SAM': '1SA', '2SAM': '2SA', '1KGS': '1KI', '2KGS': '2KI',
+    '1CHR': '1CH', '2CHR': '2CH', 'EZRA': 'EZR', 'NEHE': 'NEH',
+    'ESTH': 'EST', 'PSA': 'PSA', 'PROV': 'PRO', 'ECCL': 'ECC',
+    'SONG': 'SNG', 'ISAI': 'ISA', 'JERE': 'JER', 'LAME': 'LAM',
+    'EZEK': 'EZK', 'DANI': 'DAN', 'HOSE': 'HOS', 'JOEL': 'JOL',
+    'AMOS': 'AMO', 'OBAD': 'OBA', 'JONA': 'JON', 'MICA': 'MIC',
+    'NAHU': 'NAM', 'HABA': 'HAB', 'ZEPH': 'ZEP', 'HAGG': 'HAG',
+    'ZECH': 'ZEC', 'MALA': 'MAL', 'MATT': 'MAT', 'MARK': 'MRK',
+    'LUKE': 'LUK', 'JOHN': 'JHN', 'ACTS': 'ACT', 'ROMA': 'ROM',
+    '1COR': '1CO', '2COR': '2CO', 'GALA': 'GAL', 'EPHE': 'EPH',
+    'PHIL': 'PHP', 'COLO': 'COL', '1THE': '1TH', '2THE': '2TH',
+    '1TIM': '1TI', '2TIM': '2TI', 'TITU': 'TIT', 'PHLM': 'PHM',
+    'HEBR': 'HEB', 'JAME': 'JAS', '1PET': '1PE', '2PET': '2PE',
+    '1JOH': '1JN', '2JOH': '2JN', '3JOH': '3JN', 'JUDE': 'JUD',
+    'REVE': 'REV',
+  };
+
+  final shortMap = {
+    'PS': 'PSA',
+    'PSA': 'PSA',
+    'NAH': 'NAM',
+  };
+
+  if (cleanInput.length >= 4) {
+    final first4 = cleanInput.substring(0, 4);
+    if (fourCharMap.containsKey(first4)) {
+      return fourCharMap[first4]!;
     }
-    
-    // For shorter inputs, return as-is (already uppercase)
+    // fallback to first 3 chars if no 4-char match
+    return cleanInput.substring(0, 3);
+  } else if (cleanInput.length >= 2) {
+    if (shortMap.containsKey(cleanInput)) {
+      return shortMap[cleanInput]!;
+    }
     return cleanInput;
   }
+
+  // If shorter than 2 chars, just return as is
+  return cleanInput;
+}
+
 
   Future<List<VerseModel>> fetchVerses(String query, {String translation = 'NET'}) async {
     try {

@@ -160,7 +160,6 @@ class BibleRepositoryImpl implements BibleRepository {
       if (connectivity != ConnectivityResult.none && results.length < (limit ?? 50)) {
         try {
           // Fetch from API with remaining limit
-          final remainingLimit = limit != null ? limit - results.length : null;
           final apiResults = await remoteDataSource.fetchVerses(
             query, 
             translation: translation,

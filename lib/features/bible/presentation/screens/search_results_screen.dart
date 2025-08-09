@@ -7,16 +7,26 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
 import '../../../../core/global_widgets/loading_states.dart';
 import '../../application/bible_controller.dart';
-import '../../domain/entities/verse.dart';
 import '../widgets/verse_card_widget.dart';
 
-class SearchResultsScreen extends GetView<BibleController> {
+class SearchResultsScreen extends StatefulWidget {
   final String searchQuery;
-  
-  const SearchResultsScreen({
-    super.key,
-    required this.searchQuery,
+  const SearchResultsScreen({Key? key, required this.searchQuery}) : super(key: key);
+
+  @override
+  State<SearchResultsScreen> createState() => _SearchResultsScreenState();
+}
+
+class _SearchResultsScreenState extends State<SearchResultsScreen> {
+  final BibleController controller = Get.find();
+
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    controller.searchVerses(widget.searchQuery);
   });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +84,7 @@ class SearchResultsScreen extends GetView<BibleController> {
                   ),
                   const SizedBox(height: 8),
                   Obx(() => Text(
-                    '${controller.verses.length} results for "$searchQuery"',
+                    '${controller.verses.length} results for "${widget.searchQuery}"',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 14,
@@ -124,7 +134,7 @@ class SearchResultsScreen extends GetView<BibleController> {
                     child: VerseCardWidget(
                       verse: verse,
                       showBookReference: true,
-                      highlightQuery: searchQuery,
+                      highlightQuery: widget.searchQuery,
                     ),
                   ),
                 ),
@@ -140,7 +150,7 @@ class SearchResultsScreen extends GetView<BibleController> {
   Widget _buildLoadingState() {
     return SliverFillRemaining(
       child: Center(
-        child: SearchLoadingWidget(query: searchQuery),
+        child: SearchLoadingWidget(query: widget.searchQuery),
       ),
     );
   }
@@ -172,7 +182,7 @@ class SearchResultsScreen extends GetView<BibleController> {
               AnimatedGradientButton(
                 text: 'Try Again',
                 icon: Icons.refresh,
-                onPressed: () => controller.searchVerses(searchQuery),
+                onPressed: () => controller.searchVerses(widget.searchQuery),
               ),
             ],
           ),
@@ -200,7 +210,7 @@ class SearchResultsScreen extends GetView<BibleController> {
               ),
               const SizedBox(height: 8),
               Text(
-                'No verses found for "$searchQuery".\nTry different keywords or check spelling.',
+                'No verses found for "${widget.searchQuery}".\nTry different keywords or check spelling.',
                 style: AppTextStyles.bodyMedium,
                 textAlign: TextAlign.center,
               ),

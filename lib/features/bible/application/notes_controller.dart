@@ -144,8 +144,8 @@ class NotesController extends GetxController {
           // Create a minimal verse object for export
           final parts = verseReference.split(' ');
           if (parts.length >= 2) {
-            final bookChapter = parts.sublist(0, parts.length - 1).join(' ');
-            final verseNum = parts.last;
+            // final bookChapter = parts.sublist(0, parts.length - 1).join(' ');
+            // final verseNum = parts.last;
             
             String exportContent = _formatAutoSaveContent(verseReference, notes, highlights);
             
