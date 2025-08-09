@@ -1,155 +1,211 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
-const apkUrl = "https://github.com/jayco12/birdeye/releases/download/v1.0/app-release.apk";
+const BirdeyeLanding = () => {
+  const apkLink = "https://github.com/jayco12/birdeye/releases/download/v1.0/app-release.apk";
 
-// Dove fly animation container
-const DoveFly = () => {
-  const [doves, setDoves] = useState([]);
-
+  // State to trigger fade-in animation after mount
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    // Add a new dove every 1.5s
-    const interval = setInterval(() => {
-      const id = Math.random().toString(36).substr(2, 9);
-      const top = Math.random() * 80 + 10; // % viewport height
-      const duration = 6 + Math.random() * 6; // seconds
-      setDoves((d) => [...d, { id, top, duration }]);
-      // Remove dove after duration + 1s
-      setTimeout(() => {
-        setDoves((d) => d.filter((x) => x.id !== id));
-      }, (duration + 1) * 1000);
-    }, 1500);
-    return () => clearInterval(interval);
+    setMounted(true);
   }, []);
 
   return (
     <>
-      {doves.map(({ id, top, duration }) => (
-        <motion.div
-          key={id}
-          className="fixed text-white text-3xl select-none pointer-events-none"
-          style={{ top: `${top}vh`, left: "-10vw" }}
-          initial={{ x: "-10vw", opacity: 0 }}
-          animate={{ x: "110vw", opacity: [0, 1, 1, 0] }}
-          transition={{ duration, ease: "linear" }}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+        @keyframes fadeUp {
+          0% {opacity: 0; transform: translateY(20px);}
+          100% {opacity: 1; transform: translateY(0);}
+        }
+
+        .fadeUp {
+          animation: fadeUp 0.8s ease forwards;
+        }
+
+        .btn-download:hover {
+          background-color: #2563eb !important;
+          box-shadow: 0 8px 20px rgba(37, 99, 235, 0.6);
+          transform: translateY(-3px);
+          transition: all 0.3s ease;
+        }
+
+        .btn-download:active {
+          transform: translateY(0);
+          box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        }
+
+        .feature-icon {
+          font-size: 1.8rem;
+          margin-right: 0.8rem;
+          color: #2563eb;
+          user-select: none;
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover .feature-icon {
+          transform: scale(1.3) rotate(10deg);
+          color: #1e40af;
+        }
+      `}</style>
+
+      <div style={styles.page}>
+        <div
+          style={{
+            ...styles.container,
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? "translateY(0)" : "translateY(30px)",
+            transition: "opacity 0.8s ease, transform 0.8s ease",
+          }}
+          className="fadeUp"
         >
-          🕊️
-        </motion.div>
-      ))}
+          <h1 style={{ ...styles.title, color: "#1e40af" }}>Birdeye Bible App</h1>
+          <p style={styles.tagline}>
+            Dive deep into Scripture like never before. Explore original Greek &amp; Hebrew
+            texts, Strong’s numbers, lexicons, and rich theological insights — all in one
+            beautifully designed app.
+          </p>
+
+          <div style={styles.verseHighlight}>
+            <em>
+              In the beginning God created the heaven and the earth. — Genesis 1:1
+            </em>
+            <br />
+            <small style={{ marginTop: 8, display: "block", color: "#555" }}>
+              Tap any highlighted word to explore Strong’s definitions and lexicons.
+            </small>
+          </div>
+
+          <div style={styles.features}>
+            <Feature icon="📚" text="Study with Depth: Access original Greek & Hebrew texts with Strong’s numbers and lexicon meanings to enrich your understanding." />
+            <Feature icon="🔍" text="Search & Discover: Find verses by keyword, topic, or theme with a powerful search that connects scripture insights." />
+            <Feature icon="🌐" text="Offline & Anywhere: Download your favorite verses and study offline — stay connected to the Word wherever you go." />
+          </div>
+
+          <div style={styles.downloadButtons}>
+            <a
+              href={apkLink}
+              download
+              className="btn-download"
+              style={{ ...styles.btn, backgroundColor: "#2563eb" }}
+              aria-label="Download Android APK"
+            >
+              📱 Download for Android
+            </a>
+            <a
+              href="#"
+              className="btn-download"
+              style={{
+                ...styles.btn,
+                backgroundColor: "#999",
+                cursor: "not-allowed",
+                pointerEvents: "none",
+              }}
+              aria-disabled="true"
+              title="iOS version coming soon"
+            >
+              🍏 Download for iOS
+            </a>
+          </div>
+
+          <p style={styles.footer}>📜 Made with faith and code by Joseph Oduyebo</p>
+        </div>
+      </div>
     </>
   );
 };
 
-export default function WildBibleAPKHost() {
-  return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-700 overflow-hidden flex flex-col justify-center items-center p-8 text-white font-serif">
-      {/* Light rays behind title */}
-      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-        <motion.div
-          className="absolute w-96 h-96 bg-gradient-radial from-yellow-400/40 via-transparent to-transparent rounded-full filter blur-3xl"
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          style={{ mixBlendMode: "screen" }}
-        />
-        <motion.div
-          className="absolute w-80 h-80 bg-gradient-radial from-white/30 via-transparent to-transparent rounded-full filter blur-2xl"
-          animate={{ rotate: [0, 15, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          style={{ mixBlendMode: "screen" }}
-        />
-      </div>
+const Feature = ({ icon, text }) => (
+  <div style={styles.featureItem} className="feature-item">
+    <span className="feature-icon" aria-hidden="true">
+      {icon}
+    </span>
+    <p style={{ margin: 0 }}>{text}</p>
+  </div>
+);
 
-      {/* Glowing crosses floating */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-yellow-400 text-4xl select-none"
-          style={{
-            top: `${20 + i * 12}%`,
-            left: `${10 + (i % 2) * 70}%`,
-            filter: "drop-shadow(0 0 4px #facc15)",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}
-          animate={{
-            y: [0, 15, 0],
-            opacity: [0.7, 1, 0.7],
-            rotate: [0, 15, -15, 0],
-          }}
-          transition={{
-            duration: 8 + i,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 1.3,
-          }}
-        >
-          ✝️
-        </motion.div>
-      ))}
+const styles = {
+  page: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "linear-gradient(135deg, #e0ebff, #c7d9ff)",
+    padding: "1.5rem",
+    fontFamily: "'Montserrat', sans-serif",
+    color: "#222",
+    textAlign: "center",
+  },
+  container: {
+    maxWidth: 720,
+    backgroundColor: "white",
+    padding: "3rem 2.5rem",
+    borderRadius: 20,
+    boxShadow: "0 15px 40px rgba(37, 99, 235, 0.2)",
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: "2.75rem",
+    fontWeight: "700",
+  },
+  tagline: {
+    fontSize: "1.15rem",
+    marginBottom: "2.5rem",
+    color: "#374151",
+    fontWeight: 600,
+    lineHeight: 1.4,
+  },
+  verseHighlight: {
+    fontStyle: "italic",
+    backgroundColor: "#dbeafe",
+    padding: "1.2rem 1.5rem",
+    borderRadius: 14,
+    marginBottom: "2.5rem",
+    fontSize: "1.2rem",
+    color: "#1e3a8a",
+    boxShadow: "inset 3px 3px 8px #a3bffa",
+  },
+  features: {
+    textAlign: "left",
+    marginBottom: "3rem",
+  },
+  featureItem: {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "1.3rem",
+    fontWeight: 600,
+    fontSize: "1.07rem",
+    color: "#1f2937",
+    cursor: "default",
+    userSelect: "none",
+  },
+  downloadButtons: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "1.8rem",
+    flexWrap: "wrap",
+    marginBottom: "2.5rem",
+  },
+  btn: {
+    color: "white",
+    fontWeight: 700,
+    padding: "1rem 2rem",
+    borderRadius: 14,
+    textDecoration: "none",
+    fontSize: "1.15rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.7rem",
+    boxShadow: "0 8px 18px rgba(37, 99, 235, 0.4)",
+    userSelect: "none",
+    transition: "all 0.3s ease",
+  },
+  footer: {
+    fontSize: "0.9rem",
+    color: "#6b7280",
+    fontStyle: "italic",
+  },
+};
 
-      {/* Title */}
-      <motion.h1
-        className="text-6xl md:text-8xl font-extrabold mb-8 select-none text-center tracking-wide drop-shadow-lg"
-        animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          textShadow:
-            "0 0 12px #fff, 0 0 24px #fbbf24, 0 0 48px #f59e0b, 0 0 72px #b45309",
-        }}
-      >
-        📖 Download the Word
-      </motion.h1>
-
-      {/* Pulsing download button with sparkles */}
-      <motion.a
-        href={apkUrl}
-        download
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative bg-gradient-to-r from-yellow-400 to-red-500 text-black font-extrabold py-5 px-14 rounded-full shadow-lg uppercase tracking-widest hover:scale-110 hover:shadow-2xl transition-transform duration-300 select-none overflow-hidden"
-        whileHover={{ scale: 1.15 }}
-        whileTap={{ scale: 0.9 }}
-        aria-label="Download APK"
-      >
-        Download APK 📱
-
-        {/* Sparkle particles */}
-        <AnimatePresence>
-          <motion.span
-            className="absolute top-1/2 left-1/3 w-2 h-2 bg-white rounded-full opacity-80"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-            style={{ filter: "drop-shadow(0 0 4px #fff)" }}
-          />
-          <motion.span
-            className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-white rounded-full opacity-90"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0, 1.3, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
-            style={{ filter: "drop-shadow(0 0 6px #ffeb3b)" }}
-          />
-          <motion.span
-            className="absolute bottom-1/4 left-2/3 w-2 h-2 bg-yellow-300 rounded-full opacity-70"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 2.5 }}
-            style={{ filter: "drop-shadow(0 0 5px #f59e0b)" }}
-          />
-        </AnimatePresence>
-      </motion.a>
-
-      {/* Footer with spinning Bible */}
-      <motion.footer
-        className="mt-24 text-center opacity-80 select-none text-yellow-300 text-xl tracking-wide"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-      >
-        📜 Made with faith and code
-      </motion.footer>
-
-      {/* Dove flying effect */}
-      <DoveFly />
-    </div>
-  );
-}
+export default BirdeyeLanding;
