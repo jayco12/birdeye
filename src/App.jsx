@@ -94,7 +94,7 @@ const BirdeyeLanding = () => {
               📱 Download for Android
             </a>
             <a
-              href="#"
+              href="https://bird-eye.netlify.app/"
               className="btn-download"
               style={{
                 ...styles.btn,
