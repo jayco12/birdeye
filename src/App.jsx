@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const BirdeyeLanding = () => {
   const apkLink = "https://github.com/jayco12/birdeye/releases/download/v1.0/app-release.apk";
-
+  const ioslink="https://testflight.apple.com/join/1UVvq4Xv"
   // State to trigger fade-in animation after mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -94,7 +94,7 @@ const BirdeyeLanding = () => {
               📱 Download for Android
             </a>
             <a
-              href="https://bird-eye.netlify.app/"
+              href={ioslink}
               className="btn-download"
               style={{
                 ...styles.btn,
