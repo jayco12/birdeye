@@ -1,4 +1,4 @@
-# main.py
+from fastapi import Query
 import json
 import os
 from fastapi import FastAPI, HTTPException
@@ -132,3 +132,27 @@ def get_verse(book: str, chapter: int, verse: int):
         raise HTTPException(status_code=404, detail="Verse not found")
 
     return verse_data
+@app.get("/search")
+def search_verses(q: str = Query(..., min_length=1), translation: str = "default"):
+    results = []
+
+    q_lower = q.lower()
+
+    # Iterate all books and verses in BIBLE_DATA
+    for book_name, verses in BIBLE_DATA.items():
+        for verse in verses:
+            # Your verse text might be constructed by joining all phrase 'text' fields inside 'verse' key
+            verse_text = "".join([p.get("text", "") for p in verse.get("verse", [])]).lower()
+
+            if q_lower in verse_text:
+                # Compose minimal verse info for response
+                results.append({
+                    "id": verse.get("id"),
+                    "book": book_name,
+                    "chapter": int(verse.get("id")[2:5]),  # Extract chapter from id string
+                    "verse": int(verse.get("id")[5:]),     # Extract verse number from id string
+                    "text": verse_text,
+                    "verse_data": verse.get("verse"),      # Optional: full phrase data if needed
+                })
+
+    return {"results": results}
