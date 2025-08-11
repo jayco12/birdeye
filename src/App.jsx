@@ -4,7 +4,6 @@ const BirdeyeLanding = () => {
   const apkLink = "https://github.com/jayco12/birdeye/releases/download/v1.0/app-release.apk";
   const iosLink = "https://testflight.apple.com/join/1UVvq4Xv";
 
-  const words = ["Birdeye Bible App", "Deep Scripture Study", "Faith Meets Technology"];
   const [text, setText] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
