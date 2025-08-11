@@ -41,7 +41,7 @@ const BirdeyeLanding = () => {
   // Reveal cards staggered, one every 700ms once typing done
   useEffect(() => {
     if (visibleCards === 0) return;
-    if (visibleCards < 4) {
+    if (visibleCards < 5) {
       const timer = setTimeout(() => setVisibleCards(visibleCards + 1), 700);
       return () => clearTimeout(timer);
     }
