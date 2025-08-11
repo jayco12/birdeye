@@ -36,7 +36,7 @@ const BirdeyeLanding = () => {
     };
     const timer = setTimeout(handleTyping, speed);
     return () => clearTimeout(timer);
-  }, [text, isDeleting, speed, wordIndex, words]);
+  }, [text, isDeleting, speed, wordIndex,visibleCards]);
 
   // Reveal cards staggered, one every 700ms once typing done
   useEffect(() => {
