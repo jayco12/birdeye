@@ -14,7 +14,7 @@ const BirdeyeLanding = () => {
   const [visibleCards, setVisibleCards] = useState(0);
 
   useEffect(() => {
-    const words= React.useMemo(() => [ "BirdEye Bible","BirdEye Bible App","Deep Scripture Study"],[]);
+    const words=  [ "BirdEye Bible","BirdEye Bible App","Deep Scripture Study"];
     const handleTyping = () => {
       const currentWord = words[wordIndex];
       if (!isDeleting) {
