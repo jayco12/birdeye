@@ -8,12 +8,14 @@ const BirdeyeLanding = () => {
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [speed, setSpeed] = useState(120);
-
-  // Controls which cards are visible for staggered animation
   const [visibleCards, setVisibleCards] = useState(0);
 
+  // Accordion open states
+  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [announcementsOpen, setAnnouncementsOpen] = useState(false);
+
   useEffect(() => {
-    const words=  [ "BirdEye Bible","BirdEye Bible App","Deep Scripture Study"];
+    const words = ["BirdEye Bible", "BirdEye Bible App", "Deep Scripture Study"];
     const handleTyping = () => {
       const currentWord = words[wordIndex];
       if (!isDeleting) {
@@ -21,7 +23,6 @@ const BirdeyeLanding = () => {
         if (text.length + 1 === currentWord.length) {
           setIsDeleting(true);
           setSpeed(1200);
-          // Start revealing cards after first word typed
           if (visibleCards === 0) setVisibleCards(1);
         }
       } else {
@@ -30,33 +31,51 @@ const BirdeyeLanding = () => {
           setIsDeleting(false);
           setWordIndex((prev) => (prev + 1) % words.length);
           setSpeed(150);
-          setVisibleCards(0); // reset cards visibility on word change
+          setVisibleCards(0);
         }
       }
     };
     const timer = setTimeout(handleTyping, speed);
     return () => clearTimeout(timer);
-  }, [text, isDeleting, speed, wordIndex,visibleCards]);
+  }, [text, isDeleting, speed, wordIndex, visibleCards]);
 
-  // Reveal cards staggered, one every 700ms once typing done
+  // Staggered reveal for "Get the App" card only
   useEffect(() => {
-    if (visibleCards === 0) return;
-    if (visibleCards < 5) {
-      const timer = setTimeout(() => setVisibleCards(visibleCards + 1), 700);
+    if (visibleCards === 1) {
+      const timer = setTimeout(() => setVisibleCards(2), 700);
       return () => clearTimeout(timer);
     }
   }, [visibleCards]);
 
   const features = [
-    { icon: "📚", title: "Study with Depth", desc: "Access original Greek & Hebrew texts with Strong’s numbers and lexicon meanings to enrich your understanding." },
-    { icon: "🔍", title: "Search & Discover", desc: "Find verses by keyword, topic, or theme with a powerful search that connects scripture insights." },
-    { icon: "🌐", title: "Offline & Anywhere", desc: "Download your favorite verses and study offline — stay connected to the Word wherever you go." },
+    {
+      icon: "📚",
+      title: "Study with Depth",
+      desc:
+        "Access original Greek & Hebrew texts with Strong’s numbers and lexicon meanings to enrich your understanding.",
+    },
+    {
+      icon: "🔍",
+      title: "Search & Discover",
+      desc:
+        "Find verses by keyword, topic, or theme with a powerful search that connects scripture insights.",
+    },
+    {
+      icon: "🌐",
+      title: "Offline & Anywhere",
+      desc:
+        "Download your favorite verses and study offline — stay connected to the Word wherever you go.",
+    },
   ];
 
   const announcements = [
-    "New feature: Interactive Strong’s number lookup launching soon!",
-    "Join our upcoming live webinar on deep Scripture study techniques.",
+    "New feature: Various Translations launching soon!",
+    "New feature: Article contribution launching soon!",
   ];
+
+  // Accordion toggle handlers
+  const toggleFeatures = () => setFeaturesOpen((open) => !open);
+  const toggleAnnouncements = () => setAnnouncementsOpen((open) => !open);
 
   return (
     <>
@@ -86,68 +105,108 @@ const BirdeyeLanding = () => {
           align-items: center;
           padding: 2rem 1rem 4rem;
           text-align: center;
-        }
-
-        .title-container {
-          flex: 0 0 auto;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          height: 25vh;
           user-select: none;
         }
 
-        .title {
-          font-size: clamp(3rem, 8vw, 5rem);
-          font-weight: 900;
-          white-space: nowrap;
-          border-right: 3px solid rgba(255,255,255,0.75);
-          overflow: hidden;
-          animation: blinkCaret 0.7s step-end infinite;
-          letter-spacing: 0.06em;
-          text-shadow:
-            0 0 8px rgba(255 255 255 / 0.9),
-            0 0 15px rgba(255 255 255 / 0.6);
-        }
+       .title-container {
+  height: 30vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 900;
+  white-space: nowrap;
+  border-right: 3px solid rgba(255,255,255,0.75);
+  overflow: hidden;
+  animation: blinkCaret 0.7s step-end infinite;
+  letter-spacing: 0.06em;
+  text-shadow:
+    0 0 10px rgba(255 255 255 / 0.95),
+    0 0 25px rgba(255 255 255 / 0.75);
+}
+
 
         @keyframes blinkCaret {
           from, to { border-color: transparent; }
           50% { border-color: rgba(255,255,255,0.75); }
         }
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  background: rgba(255 255 255 / 0.1);
+  box-shadow: 0 0 8px rgba(255 100 100 / 0.15);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  cursor: default;
+  user-select: none;
+}
 
-        .cards-container {
-          width: 100%;
-          max-width: 960px;
-          margin-top: 2rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.6rem;
-          user-select: none;
-        }
+.feature-item:hover {
+  background: rgba(255 255 255 / 0.15);
+  box-shadow: 0 0 15px rgba(255 100 100 / 0.4);
+}
 
+.feature-icon {
+  font-size: 2.4rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 130, 50, 0.8));
+  transition: transform 0.3s ease;
+  margin-top: 0.2rem;
+}
+
+.feature-item:hover .feature-icon {
+  transform: scale(1.2) rotate(5deg);
+  filter: drop-shadow(0 0 10px rgba(255, 160, 60, 1));
+}
+
+.feature-desc {
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #ffddb3; /* soft orange-ish text */
+  letter-spacing: 0.02em;
+  position: relative;
+}
+
+.feature-desc::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  background: #ff7a18;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff7a18;
+}
+
+
+        /* Get the App Card */
         .card {
           background: rgba(255 255 255 / 0.15);
           backdrop-filter: blur(12px);
           border-radius: 18px;
           padding: 1.8rem 2rem;
           box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+          color: white;
+          text-align: center;
+          margin-top: 2rem;
           opacity: 0;
           transform: translateY(30px);
           animation-fill-mode: forwards;
-          color: white;
-          text-align: left;
-          transition: transform 0.3s ease;
         }
 
         .card.visible {
           animation: slideFadeIn 0.6s ease forwards;
-        }
-
-        .card:hover {
-          transform: translateY(0) scale(1.03);
-          box-shadow: 0 18px 35px rgba(0,0,0,0.45);
-          cursor: default;
         }
 
         @keyframes slideFadeIn {
@@ -157,27 +216,7 @@ const BirdeyeLanding = () => {
           }
         }
 
-        .feature-icon {
-          font-size: 2.2rem;
-          margin-right: 1rem;
-          vertical-align: middle;
-          user-select: none;
-          filter: drop-shadow(0 0 3px rgba(0,0,0,0.3));
-        }
-
-        .feature-title {
-          font-weight: 700;
-          font-size: 1.3rem;
-          margin-bottom: 0.3rem;
-        }
-
-        .feature-desc {
-          font-weight: 500;
-          font-size: 1rem;
-          line-height: 1.4;
-          opacity: 0.9;
-        }
-
+        /* Download buttons */
         .download-buttons {
           display: flex;
           justify-content: center;
@@ -202,13 +241,6 @@ const BirdeyeLanding = () => {
           gap: 0.7rem;
           transition: all 0.3s ease;
           user-select: none;
-          opacity: 0;
-          transform: translateY(30px);
-          animation-fill-mode: forwards;
-        }
-
-        .btn-download.visible {
-          animation: slideFadeIn 0.6s ease forwards;
         }
 
         .btn-download:hover {
@@ -219,6 +251,81 @@ const BirdeyeLanding = () => {
             inset 0 -3px 5px rgba(255 122 24 / 0.7);
         }
 
+        /* Accordion styles */
+        .accordion {
+          width: 100%;
+          max-width: 960px;
+          margin-top: 1.5rem;
+          text-align: left;
+          user-select: none;
+          color: white;
+        }
+
+        .accordion-header {
+          background: rgba(255 255 255 / 0.1);
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+          transition: background 0.3s ease;
+          user-select: none;
+        }
+
+        .accordion-header:hover {
+          background: rgba(255 255 255 / 0.25);
+        }
+
+        .accordion-content {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.5s ease, padding 0.5s ease;
+          padding: 0 1.5rem;
+          font-weight: 500;
+          font-size: 1rem;
+          opacity: 0;
+        }
+
+        .accordion-content.open {
+          max-height: 1000px; /* large enough for content */
+          padding: 1rem 1.5rem;
+          opacity: 1;
+        }
+
+        .feature-item {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1rem;
+          align-items: flex-start;
+        }
+
+        .feature-icon {
+          font-size: 2rem;
+          user-select: none;
+          filter: drop-shadow(0 0 3px rgba(0,0,0,0.3));
+          margin-top: 0.2rem;
+          flex-shrink: 0;
+        }
+
+        .feature-desc {
+          line-height: 1.4;
+          opacity: 0.9;
+          margin: 0;
+        }
+
+        ul.announcements-list {
+          list-style: disc;
+          margin-left: 1.3rem;
+          padding-left: 0;
+          opacity: 0.9;
+          margin-bottom: 0;
+        }
+
+        /* Footer */
         .footer {
           font-size: 0.85rem;
           color: rgba(255, 255, 255, 0.85);
@@ -229,6 +336,7 @@ const BirdeyeLanding = () => {
           text-shadow: 0 0 3px rgba(0 0 0 / 0.25);
         }
 
+        /* Responsive */
         @media (max-width: 700px) {
           .title {
             font-size: 3rem;
@@ -240,6 +348,9 @@ const BirdeyeLanding = () => {
             font-size: 1rem;
             padding: 0.9rem 1.8rem;
           }
+          .accordion-header {
+            font-size: 1.1rem;
+          }
         }
       `}</style>
 
@@ -248,40 +359,72 @@ const BirdeyeLanding = () => {
           <h1 className="title">{text}</h1>
         </div>
 
-        <div className="cards-container" aria-label="App features, announcements, and downloads">
-          {/* Features */}
-          {features.map((f, i) => (
-            <div key={i} className={`card ${visibleCards > i ? "visible" : ""}`} role="region" aria-labelledby={`feature-title-${i}`}>
-              <span className="feature-icon" aria-hidden="true">{f.icon}</span>
-              <div>
-                <h2 id={`feature-title-${i}`} className="feature-title">{f.title}</h2>
+        {/* Get the App Card */}
+        {visibleCards >= 2 && (
+          <div className="card visible" role="region" aria-label="Get the App download options">
+            <h2>Get the App</h2>
+            <div className="download-buttons">
+              <a href={apkLink} className="btn-download" aria-label="Download for Android">
+                📱 Android
+              </a>
+              <a href={iosLink} className="btn-download" aria-label="Download for iOS">
+                🍏 iOS
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Features Accordion */}
+        <div className="accordion" role="region" aria-labelledby="features-header">
+          <button
+            id="features-header"
+            className="accordion-header"
+            aria-expanded={featuresOpen}
+            aria-controls="features-content"
+            onClick={toggleFeatures}
+          >
+            Features
+            <span>{featuresOpen ? "▲" : "▼"}</span>
+          </button>
+          <div
+            id="features-content"
+            className={`accordion-content ${featuresOpen ? "open" : ""}`}
+            aria-hidden={!featuresOpen}
+          >
+            {features.map((f, i) => (
+              <div key={i} className="feature-item">
+                <span className="feature-icon" aria-hidden="true">
+                  {f.icon}
+                </span>
                 <p className="feature-desc">{f.desc}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
 
-          {/* Announcements */}
-          {visibleCards > features.length && (
-            <div className="card visible" role="region" aria-label="Announcements">
-              <h2 className="feature-title">Announcements</h2>
-              <ul>
-                {announcements.map((a, i) => (
-                  <li key={i} style={{ marginBottom: "0.7rem", opacity: 0.9 }}>{a}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Download buttons */}
-          {visibleCards > features.length + 1 && (
-            <div className="card visible" role="region" aria-label="Download options" style={{ textAlign: "center" }}>
-              <h2 className="feature-title" style={{ marginBottom: "1rem" }}>Get the App</h2>
-              <div className="download-buttons">
-                <a href={apkLink} className="btn-download" aria-label="Download for Android">📱 Android</a>
-                <a href={iosLink} className="btn-download" aria-label="Download for iOS">🍏 iOS</a>
-              </div>
-            </div>
-          )}
+        {/* Announcements Accordion */}
+        <div className="accordion" role="region" aria-labelledby="announcements-header">
+          <button
+            id="announcements-header"
+            className="accordion-header"
+            aria-expanded={announcementsOpen}
+            aria-controls="announcements-content"
+            onClick={toggleAnnouncements}
+          >
+            Announcements
+            <span>{announcementsOpen ? "▲" : "▼"}</span>
+          </button>
+          <div
+            id="announcements-content"
+            className={`accordion-content ${announcementsOpen ? "open" : ""}`}
+            aria-hidden={!announcementsOpen}
+          >
+            <ul className="announcements-list">
+              {announcements.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <p className="footer">📜 Made with faith and code by Joseph Oduyebo</p>
