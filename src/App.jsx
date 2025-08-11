@@ -14,6 +14,7 @@ const BirdeyeLanding = () => {
   const [visibleCards, setVisibleCards] = useState(0);
 
   useEffect(() => {
+    const words= React.useMemo(() => [ "BirdEye Bible","BirdEye Bible App","Deep Scripture Study"],[]);
     const handleTyping = () => {
       const currentWord = words[wordIndex];
       if (!isDeleting) {
@@ -36,7 +37,7 @@ const BirdeyeLanding = () => {
     };
     const timer = setTimeout(handleTyping, speed);
     return () => clearTimeout(timer);
-  }, [text, isDeleting, speed, wordIndex,visibleCards, words]);
+  }, [text, isDeleting, speed, wordIndex,visibleCards]);
 
   // Reveal cards staggered, one every 700ms once typing done
   useEffect(() => {
