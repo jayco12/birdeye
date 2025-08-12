@@ -1,5 +1,4 @@
 import requests
-
 from fastapi import Query
 import json
 import os
