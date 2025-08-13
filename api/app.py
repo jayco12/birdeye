@@ -341,7 +341,7 @@ def get_single_verse(book: str, chapter: int, verse: int):
     }
 
 
-@app.get("/search")
+@app.get("/merged/search")
 def search_verses(q: str = Query(..., min_length=1)):
     q_lower = q.lower()
     results = []
