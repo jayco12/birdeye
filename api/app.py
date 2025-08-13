@@ -159,20 +159,43 @@ for filename in os.listdir(BIBLE_FOLDER):
         with open(os.path.join(BIBLE_FOLDER, filename), "r", encoding="utf-8") as f:
             BIBLE_DATA[book_name] = json.load(f)
 @app.get("/books/{translation}/{book}/{chapter}")
-def get_helloao_chapter(translation: str, book: str, chapter: int):
-    # Validate translation? (optional)
+def get_helloao_chapter_structured(translation: str, book: str, chapter: int):
     # Normalize book code
     try:
-        _, api_code = normalize_book(book)
+        folder_key, api_code = normalize_book(book)
     except HTTPException as e:
         raise e
-    
-    # Call HelloAO API for that translation
+
+    # Fetch chapter data from HelloAO API
     url = f"{HELLOAO_BASE}/{translation}/{api_code}/{chapter}.json"
     r = requests.get(url)
     if r.status_code != 200:
-        raise HTTPException(status_code=404, detail=f"Chapter not found in HelloAO for translation '{translation}'")
-    return r.json()
+        raise HTTPException(status_code=404, detail=f"Chapter not found for translation '{translation}'")
+
+    data = r.json()
+
+    verses = []
+    for verse_entry in data["chapter"]["content"]:
+        if verse_entry.get("type") != "verse":
+            continue
+
+        verse_number = verse_entry.get("number")
+        clean_text = " ".join(
+            part if isinstance(part, str) else part.get("text", "")
+            for part in verse_entry.get("content", [])
+        )
+
+        verses.append({
+            "verse_number": verse_number,
+            "clean_text": clean_text,
+            "strongs": []  # empty because no local Strong's merge here
+        })
+
+    return {
+        "book": data["book"]["name"],
+        "chapter": chapter,
+        "verses": verses
+    }
 
 @app.get("/books/{translation}/{book}/{chapter}/{verse}")
 def get_helloao_verse(translation: str, book: str, chapter: int, verse: int):
