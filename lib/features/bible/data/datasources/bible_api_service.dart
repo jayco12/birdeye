@@ -1,232 +1,354 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/verse_model.dart';
+import 'offline_cache_service.dart';
 
 class BibleApiService {
   final http.Client client;
-  static const String baseUrl = 'https://biblesdk.com';
+  static const String baseUrl = 'https://birdeye.onrender.com';
+final OfflineCacheService offlineCache = OfflineCacheService();
 
   BibleApiService(this.client);
 
- String _mapBookName(String input) {
-  final cleanInput = input.toUpperCase().replaceAll(' ', '');
+  String _mapBookName(String input) {
+    final normalized = input.trim().toLowerCase().replaceAll(' ', '_');
 
-  final fourCharMap = {
-    'GENE': 'GEN', 'EXOD': 'EXO', 'LEVI': 'LEV', 'NUMB': 'NUM',
-    'DEUT': 'DEU', 'JOSH': 'JOS', 'JUDG': 'JDG', 'RUTH': 'RUT',
-    '1SAM': '1SA', '2SAM': '2SA', '1KGS': '1KI', '2KGS': '2KI',
-    '1CHR': '1CH', '2CHR': '2CH', 'EZRA': 'EZR', 'NEHE': 'NEH',
-    'ESTH': 'EST', 'PSA': 'PSA', 'PROV': 'PRO', 'ECCL': 'ECC',
-    'SONG': 'SNG', 'ISAI': 'ISA', 'JERE': 'JER', 'LAME': 'LAM',
-    'EZEK': 'EZK', 'DANI': 'DAN', 'HOSE': 'HOS', 'JOEL': 'JOL',
-    'AMOS': 'AMO', 'OBAD': 'OBA', 'JONA': 'JON', 'MICA': 'MIC',
-    'NAHU': 'NAM', 'HABA': 'HAB', 'ZEPH': 'ZEP', 'HAGG': 'HAG',
-    'ZECH': 'ZEC', 'MALA': 'MAL', 'MATT': 'MAT', 'MARK': 'MRK',
-    'LUKE': 'LUK', 'JOHN': 'JHN', 'ACTS': 'ACT', 'ROMA': 'ROM',
-    '1COR': '1CO', '2COR': '2CO', 'GALA': 'GAL', 'EPHE': 'EPH',
-    'PHIL': 'PHP', 'COLO': 'COL', '1THE': '1TH', '2THE': '2TH',
-    '1TIM': '1TI', '2TIM': '2TI', 'TITU': 'TIT', 'PHLM': 'PHM',
-    'HEBR': 'HEB', 'JAME': 'JAS', '1PET': '1PE', '2PET': '2PE',
-    '1JOH': '1JN', '2JOH': '2JN', '3JOH': '3JN', 'JUDE': 'JUD',
-    'REVE': 'REV',
-  };
+    final bookMap = {
+      'gen': 'GEN',
+      'exod': 'EXO',
+      'lev': 'LEV',
+      'num': 'NUM',
+      'deut': 'DEU',
+      'josh': 'JOS',
+      'judg': 'JDG',
+      'ruth': 'RUT',
+      '1sam': '1SA',
+      '2sam': '2SA',
+      '1kgs': '1KI',
+      '2kgs': '2KI',
+      '1chr': '1CH',
+      '2chr': '2CH',
+      'ezra': 'EZR',
+      'neh': 'NEH',
+      'esth': 'EST',
+      'job': 'JOB',
+      'ps': 'PSA',
+      'prov': 'PRO',
+      'eccl': 'ECC',
+      'song': 'SNG',
+      'isa': 'ISA',
+      'jer': 'JER',
+      'lam': 'LAM',
+      'ezek': 'EZK',
+      'dan': 'DAN',
+      'hos': 'HOS',
+      'joel': 'JOL',
+      'amos': 'AMO',
+      'obad': 'OBA',
+      'jonah': 'JON',
+      'mic': 'MIC',
+      'nah': 'NAM',
+      'hab': 'HAG',
+      'zeph': 'ZEP',
+      'hab': 'HAB',
+      'zech': 'ZEC',
+      'mal': 'MAL',
+      'matt': 'MAT',
+      'mark': 'MRK',
+      'luke': 'LUK',
+      'john': 'JHN',
+      'acts': 'ACT',
+      'rom': 'ROM',
+      '1cor': '1CO',
+      '2cor': '2CO',
+      'gal': 'GAL',
+      'eph': 'EPH',
+      'phil': 'PHP',
+      'col': 'COL',
+      '1thess': '1TH',
+      '2thess': '2TH',
+      '1tim': '1TIv',
+      '2tim': '2TI',
+      'titus': 'TIT',
+      'phlm': 'PHM',
+      'heb': 'HEB',
+      'jas': 'JAS',
+      '1pet': '1PE',
+      '2pet': '2PE',
+      '1john': '1JN',
+      '2john': '2JN',
+      '3john': '3JN',
+      'jude': 'JUD',
+      'rev': 'REV',
+    };
 
-  final shortMap = {
-    'PS': 'PSA',
-    'PSA': 'PSA',
-    'NAH': 'NAM',
-  };
-
-  if (cleanInput.length >= 4) {
-    final first4 = cleanInput.substring(0, 4);
-    if (fourCharMap.containsKey(first4)) {
-      return fourCharMap[first4]!;
-    }
-    // fallback to first 3 chars if no 4-char match
-    return cleanInput.substring(0, 3);
-  } else if (cleanInput.length >= 2) {
-    if (shortMap.containsKey(cleanInput)) {
-      return shortMap[cleanInput]!;
-    }
-    return cleanInput;
+    return bookMap[normalized] ?? normalized;
   }
 
-  // If shorter than 2 chars, just return as is
-  return cleanInput;
+Future<List<VerseModel>> fetchVerses(String query, String translation ) async {
+  if (query.contains(':')) {
+    return await _fetchSpecificVerse(query, translation);
+  } else if (RegExp(r'^[A-Za-z0-9 ]+$').hasMatch(query.trim())) {
+    return await _fetchChapterVerses(query, translation);
+  } else {
+    return await searchVerses(query);
+  }
+}
+Uri _buildVerseUri(String book, int chapter, int verse, String translation) {
+  final basePath = '$baseUrl/merged/$book/$chapter/$verse';
+  if (translation.toUpperCase() == 'KJV') {
+    return Uri.parse(basePath);
+  }  else if (translation.toUpperCase() == 'BSB') {
+    return Uri.parse('$baseUrl/books/BSB/$book/$chapter');
+
+  }  else if (translation.toUpperCase() == 'ASV') {
+    return Uri.parse('$baseUrl/books/eng_asv/$book/$chapter');
+
+  }else if (translation.toUpperCase() == 'LSV') {
+    return Uri.parse('$baseUrl/books/eng_lsv/$book/$chapter');
+
+  }else {
+    return Uri.parse('$baseUrl/merged/$book/$chapter/$verse');
+  }
 }
 
+Future<List<VerseModel>> _fetchSpecificVerse(String reference, String translation) async {
+  final parts = reference.split(':');
+  if (parts.length != 2) throw Exception('Invalid reference format');
 
-  Future<List<VerseModel>> fetchVerses(String query, {String translation = 'NET'}) async {
-    try {
-      print('🔍 Fetching verses for query: $query');
-      if (query.contains(':')) {
-        return await _fetchSpecificVerse(query, translation);
-      } else if (RegExp(r'^[A-Za-z0-9]+ \d+$').hasMatch(query.trim())) {
-        return await _fetchChapterVerses(query, translation);
-      } else {
-        return await _searchVerses(query, translation);
-      }
-    } catch (e) {
-      print('❌ API request failed: $e');
-      throw Exception('API request failed: $e');
-    }
+  final bookChapter = parts[0].trim();
+  final verse = int.tryParse(parts[1].trim()) ?? 1;
+
+  final bookParts = bookChapter.split(' ');
+  final chapter = int.tryParse(bookParts.last) ?? 1;
+  final bookPart = bookParts.sublist(0, bookParts.length - 1).join(' ');
+  final book = _mapBookName(bookPart);
+
+  final url = _buildVerseUri(book, chapter, verse, translation);
+
+  print('📖 Input: $reference → book="$book", chapter=$chapter, verse=$verse, translation=$translation');
+  print('📚 Fetching from: $url');
+
+  final response = await client.get(url);
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    print('API response: $data');
+
+    return [VerseModel.fromApi(data, translation, book, chapter, verse)];
+    
   }
 
-  Future<List<VerseModel>> _fetchSpecificVerse(String reference, String translation) async {
-    final parts = reference.split(':');
-    if (parts.length != 2) throw Exception('Invalid reference format');
-    
-    final bookChapter = parts[0].trim();
-    final verse = int.tryParse(parts[1].trim()) ?? 1;
-    
-    final bookParts = bookChapter.split(' ');
-    final chapter = int.tryParse(bookParts.last) ?? 1;
-    final bookPart = bookParts.sublist(0, bookParts.length - 1).join(' ');
-    final book = _mapBookName(bookPart);
+  return [];
+}
+Uri _buildChapterUri(String book, int chapter, String translation) {
+  final basePath = '$baseUrl/merged/$book/$chapter';
+  if (translation.toUpperCase() == 'KJV') {
+    return Uri.parse(basePath);
+  } 
+  else if (translation.toUpperCase() == 'BSB') {
+    return Uri.parse('$baseUrl/books/BSB/$book/$chapter');
 
-    final url = Uri.parse('$baseUrl/api/books/$book/chapters/$chapter/verses/$verse?concordance=true');
-    print('📡 Fetching verse from: $url');
-    final response = await client.get(url);
-    print('📊 Response status: ${response.statusCode}');
-    print('📄 Response body: ${response.body}');
+  }  else if (translation.toUpperCase() == 'ASV') {
+    return Uri.parse('$baseUrl/books/eng_asv/$book/$chapter');
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return [VerseModel.fromBibleSdkVerse(data, translation, book, chapter, verse)];
-    }
-    return [];
+  }else if (translation.toUpperCase() == 'LSV') {
+    return Uri.parse('$baseUrl/books/eng_lsv/$book/$chapter');
+
+  }else if (translation.toUpperCase() == 'NET') {
+    return Uri.parse('$baseUrl/books/eng_net/$book/$chapter');
+
+  }
+  else{
+    return Uri.parse('$baseUrl/merged/$book/$chapter');
+  }
+}
+Future<List<VerseModel>> fetchChapter(String reference, String translation) async {
+  final offlineService = OfflineCacheService();
+
+  // 1️⃣ Try to load cached verses
+  final cached = await offlineService.getCachedVerses(
+    _mapBookNameFromReference(reference),
+    _getChapterNumberFromReference(reference),
+    translation,
+  );
+
+  if (cached.isNotEmpty) {
+    print('📚 Loaded ${cached.length} verses from offline cache for $reference ($translation)');
+    return cached;
   }
 
-  Future<List<VerseModel>> _fetchChapterVerses(String query, String translation) async {
-    final parts = query.trim().split(' ');
-    final chapter = int.tryParse(parts.last) ?? 1;
-    final bookPart = parts.sublist(0, parts.length - 1).join(' ');
-    final book = _mapBookName(bookPart);
-    
-    print('📖 Input: $bookPart → Mapped book: $book, chapter: $chapter');
+  // 2️⃣ Fetch from API
+  final fetchedVerses = await _fetchChapterVerses(reference, translation);
 
-    final allPhrases = <Map<String, dynamic>>[];
-    int take = 1000;
-    int cursor = 1;
-    bool hasMore = true;
-    
-    while (hasMore && take <= 10000) {
-      final url = '$baseUrl/api/books/$book/chapters/$chapter/verses?concordance=true&take=$take&cursor=$cursor';
-      print('📚 Fetching from: $url');
-      final response = await client.get(Uri.parse(url));
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('📄 Response data keys: ${data.keys.toList()}');
-        
-        if (data['phrases'] != null) {
-          final phrases = (data['phrases'] as List).cast<Map<String, dynamic>>();
-          print('📝 Got ${phrases.length} phrases');
-          allPhrases.addAll(phrases);
-          
-          // Use next link from API response for proper pagination
-          if (data['links']?['next'] != null) {
-            final nextLink = data['links']['next'] as String;
-            cursor = int.tryParse(RegExp(r'cursor=(\d+)').firstMatch(nextLink)?.group(1) ?? '0') ?? cursor + take;
-          } else {
-            hasMore = false;
-          }
-        } else {
-          hasMore = false;
-        }
-      } else {
-        print('❌ Error ${response.statusCode}: ${response.body}');
-        break;
-      }
-    }
+  if (fetchedVerses.isNotEmpty) {
+    // 3️⃣ Cache verses locally
+    await offlineService.cacheVerses(fetchedVerses);
 
-    print('📁 Total phrases collected: ${allPhrases.length}');
-    final verseMap = <int, List<Map<String, dynamic>>>{};
-    
-    for (final phrase in allPhrases) {
-      if (phrase['verse'] != null) {
-        final verseNum = phrase['verse'] as int;
-        verseMap.putIfAbsent(verseNum, () => []);
-        verseMap[verseNum]!.add(phrase);
-      }
-    }
-    
-    print('📝 Found ${verseMap.length} verses: ${verseMap.keys.toList()}');
-    
-    final verses = <VerseModel>[];
-    final sortedEntries = verseMap.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-    
-    for (final entry in sortedEntries) {
-      verses.add(VerseModel.fromBibleSdkVerse({
-        'phrases': entry.value
-      }, translation, book, chapter, entry.key));
-    }
-    return verses;
+    // 4️⃣ Update chapter entry with verse count
+    final bookAbbr = fetchedVerses.first.bookAbbreviation;
+    final chapterNumber = fetchedVerses.first.chapterNumber;
+    await offlineService.updateChapterVerseCount(bookAbbr, chapterNumber, fetchedVerses.length);
+
+    print('🌐 Fetched ${fetchedVerses.length} verses from API and cached locally for $reference ($translation)');
   }
 
-  Future<List<VerseModel>> _searchVerses(String query, String translation) async {
-    try {
-      // Try multiple search approaches for better results
-      final results = <VerseModel>[];
-      
-      // 1. Direct search
-      final directUrl = Uri.parse('$baseUrl/api/search?query=${Uri.encodeComponent(query)}&concordance=true');
-      print('🔍 Direct search from: $directUrl');
-      final directResponse = await client.get(directUrl);
-      
-      if (directResponse.statusCode == 200) {
-        final data = jsonDecode(directResponse.body);
-        if (data['results'] != null) {
-          final directResults = data['results'] as List;
-          results.addAll(directResults
-              .map((r) => VerseModel.fromBibleSdkSearch(r as Map<String, dynamic>, translation))
-              .toList());
-        }
-      }
-      
-      // 2. If phrase search, try individual words
-      if (results.isEmpty && query.contains(' ')) {
-        final words = query.split(' ').where((w) => w.length > 2).toList();
-        for (final word in words.take(3)) { // Limit to first 3 words
-          final wordUrl = Uri.parse('$baseUrl/api/search?query=${Uri.encodeComponent(word)}&concordance=true');
-          print('🔍 Word search for "$word" from: $wordUrl');
-          final wordResponse = await client.get(wordUrl);
-          
-          if (wordResponse.statusCode == 200) {
-            final wordData = jsonDecode(wordResponse.body);
-            if (wordData['results'] != null) {
-              final wordResults = wordData['results'] as List;
-              final wordVerses = wordResults
-                  .map((r) => VerseModel.fromBibleSdkSearch(r as Map<String, dynamic>, translation))
-                  .where((v) => v.text.toLowerCase().contains(query.toLowerCase()))
-                  .toList();
-              
-              // Add unique results
-              for (final verse in wordVerses) {
-                final isDuplicate = results.any((existing) => 
-                  existing.bookAbbreviation == verse.bookAbbreviation &&
-                  existing.chapterNumber == verse.chapterNumber &&
-                  existing.verseNumber == verse.verseNumber
-                );
-                if (!isDuplicate) {
-                  results.add(verse);
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      print('📊 Total search results: ${results.length}');
-      return results;
-    } catch (e) {
-      print('❌ Search error: $e');
-      return [];
-    }
+  return fetchedVerses;
+}
+
+// Helper to extract chapter number
+int _getChapterNumberFromReference(String reference) {
+  final parts = reference.split(' ');
+  return int.tryParse(parts.last) ?? 1;
+}
+
+// Helper to map book name
+String _mapBookNameFromReference(String reference) {
+  final parts = reference.split(' ');
+  final bookPart = parts.sublist(0, parts.length - 1).join(' ');
+  return _mapBookName(bookPart);
+}
+
+Future<List<VerseModel>> _fetchChapterVerses(String query, String translation) async {
+  final parts = query.trim().split(' ');
+  final chapter = int.tryParse(parts.last) ?? 1;
+  final bookPart = parts.sublist(0, parts.length - 1).join(' ');
+  final book = _mapBookName(bookPart);
+
+  final url = _buildChapterUri(book, chapter, translation);
+
+  print('📖 Input: $query → book="$book", chapter=$chapter, translation=$translation');
+  print('📚 Fetching from: $url');
+
+  final response = await client.get(url);
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> decoded = jsonDecode(response.body);
+    final versesData = decoded['verses'] as List<dynamic>;
+
+    return versesData.map((v) {
+      return VerseModel.fromApi(
+        v,
+        translation,
+        book,
+        chapter,
+        v['verse_number'] as int? ?? 1,
+      );
+    }).toList();
   }
 
+  return [];
+}
+
+String formatVerseText(String raw) {
+  if (raw.isEmpty) return raw;
+
+  // Fix multiple spaces and trim
+  var cleaned = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  // Capitalize first letter
+  cleaned = cleaned[0].toUpperCase() + cleaned.substring(1);
+
+  // Add punctuation if completely missing
+  if (!cleaned.endsWith('.') &&
+      !cleaned.endsWith('!') &&
+      !cleaned.endsWith('?')) {
+    cleaned += '.';
+  }
+
+  return cleaned;
+}
+Future<List<Map<String, dynamic>>> getBooksList() async {
+  final url = Uri.parse('https://bible.helloao.org/api/eng_kjv/books.json');
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    return List<Map<String, dynamic>>.from(decoded['books']); // ✅ fix
+  }
+  throw Exception('Failed to load books list');
+}
+  Future<List<VerseModel>> search(String query, [String translation = 'KJV']) async {
+    // 1️⃣ Try cache first
+    final cached = await offlineCache.searchCachedVerses(query, translation);
+    if (cached.isNotEmpty) {
+      print('📦 Found ${cached.length} matches in offline cache');
+      return cached;
+    }
+
+    // 2️⃣ Fallback to online search
+    final online = await searchVerses(query); // your existing online search
+    if (online.isNotEmpty) {
+      print('💾 Caching ${online.length} verses to offline database');
+      
+      await offlineCache.cacheVerses(online);
+    }
+
+    return online;
+  }
+Future<List<VerseModel>> searchVerses(String query) async {
+  print('🔍 Starting Bible search for: "$query"');
+
+  final books = await getBooksList();
+  print('📚 Loaded ${books.length} books from API');
+
+  final results = <VerseModel>[];
+
+for (var book in books) {
+  final chapters = book['numberOfChapters'] as int? ?? 0;
+  final bookName = book['name'];
+  final abbreviation = book['id']; // use 'id' field, not 'abbr'
+
+  print('📖 Searching $bookName ($chapters chapters)');
+
+  final chapterFutures = List.generate(chapters, (i) async {
+    final chapterNumber = i + 1;
+    final chapterUrl = Uri.parse(
+        'https://bible.helloao.org/api/eng_kjv/$abbreviation/$chapterNumber.json');
+    
+    print('⏳ Fetching $bookName $chapterNumber...');
+    final chapterResponse = await http.get(chapterUrl);
+
+    if (chapterResponse.statusCode != 200) {
+      print('❌ Failed to load $bookName $chapterNumber');
+      return;
+    }
+
+    final chapterData = jsonDecode(chapterResponse.body) as Map<String, dynamic>;
+    final verses = chapterData['chapter']['content'] as List<dynamic>? ?? [];
+
+    for (var verseData in verses) {
+      if (verseData['type'] != 'verse') continue;
+
+      final verseNumber = verseData['number'] as int? ?? 0;
+      final verseTextList = verseData['content'] as List<dynamic>? ?? [];
+      final verseText = verseTextList
+          .whereType<String>()
+          .join(' ')
+          .trim();
+
+      if (verseText.toLowerCase().contains(query.toLowerCase())) {
+        print('✅ Found match in $bookName $chapterNumber:$verseNumber');
+        results.add(VerseModel(
+          bookName: bookName,
+          bookAbbreviation: abbreviation,
+          chapterNumber: chapterNumber,
+          verseNumber: verseNumber,
+          text: verseText,
+          translation: 'KJV',
+          reference: '$bookName $chapterNumber:$verseNumber',
+          testament: VerseModel.getTestament(bookName),
+        ));
+      }
+    }
+  });
+
+  await Future.wait(chapterFutures);
+}
+
+print('🏁 Search complete — ${results.length} matches found');
+return results;
+}
   Future<List<String>> getAvailableTranslations() async {
-    return ['NET', 'KJV', 'ESV', 'NIV', 'NASB', 'NLT'];
+    return ['NET', 'KJV', 'LSV', 'NIV', 'BSB', 'ASV'];
   }
+  
 }

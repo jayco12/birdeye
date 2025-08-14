@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "135306016932",
+    "project_id": "bird-eye-7d52a",
+    "storage_bucket": "bird-eye-7d52a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135306016932:android:931d551096c5886eaf8e31",
+        "android_client_info": {
+          "package_name": "com.blackbird.blackbird"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs403lcQgLbtXT13d679WyN_eaR2ez_90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

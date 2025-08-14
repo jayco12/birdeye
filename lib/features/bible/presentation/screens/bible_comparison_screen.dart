@@ -161,7 +161,7 @@ class BibleComparisonScreen extends GetView<BibleController> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      verse.translation,
+                      "KJV",
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -188,7 +188,7 @@ class BibleComparisonScreen extends GetView<BibleController> {
   }
 
   void _showAddTranslationDialog(BuildContext context) {
-    final availableTranslations = ['KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'MSG', 'AMP'];
+    final availableTranslations = ['KJV', 'NET'];
     
     showDialog(
       context: context,

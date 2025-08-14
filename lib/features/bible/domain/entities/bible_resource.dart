@@ -20,7 +20,8 @@ enum ResourceType {
   context,
   theological,
   miscellaneous,
-  earlyFathers
+  earlyFathers,
+  contributions
 }
 
 class ResourceUrl {

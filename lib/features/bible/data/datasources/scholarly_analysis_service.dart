@@ -62,12 +62,13 @@ class ScholarlyAnalysisService {
     };
   }
 
-  String _cleanText(String text) {
-    return text
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(RegExp(r'[^\w\s.,;:!?()-]'), '')
-        .trim();
-  }
+String _cleanText(String text) {
+  return text
+      .replaceAll(RegExp(r'\s+\n\s+'), '\n\n') 
+      .replaceAll(RegExp(r'[^\w\s.,;:!?()-\n]'), '') 
+      .trim();
+}
+
 
   String _getBibleHubStudyUrl(Verse verse) {
     final bookName = _normalizeBookName(verse.bookName);

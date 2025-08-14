@@ -149,7 +149,7 @@ class VerseVideosScreen extends StatelessWidget {
 
   List<VideoQuery> _generateVideoQueries() {
     final reference = '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}';
-    
+
     return [
       VideoQuery(
         title: 'Verse Explanation',
@@ -175,12 +175,12 @@ class VerseVideosScreen extends StatelessWidget {
         icon: Icons.book,
         searchQuery: '$reference bible study',
       ),
-      VideoQuery(
-        title: 'Hebrew/Greek',
-        description: 'Original language insights',
-        icon: Icons.language,
-        searchQuery: '$reference ${verse.testament.name == 'old' ? 'hebrew' : 'greek'} original language',
-      ),
+      // VideoQuery(
+      //   title: 'Hebrew/Greek',
+      //   description: 'Original language insights',
+      //   icon: Icons.language,
+      //   searchQuery: '$reference ${verse.testament.name == 'old' ? 'hebrew' : 'greek'} original language',
+      // ),
       VideoQuery(
         title: 'Context',
         description: 'Historical and cultural context',

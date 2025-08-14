@@ -132,7 +132,7 @@ class BibleRepositoryImpl implements BibleRepository {
       }
       
       // Fetch from API and cache
-      final verses = await remoteDataSource.fetchVerses('$bookAbbreviation $chapterNumber', translation: translation);
+      final verses = await remoteDataSource.fetchVerses('$bookAbbreviation $chapterNumber',translation);
       await cacheService.cacheVerses(verses.cast());
       return verses;
     } catch (e) {
@@ -145,24 +145,23 @@ class BibleRepositoryImpl implements BibleRepository {
     try {
       final results = <Verse>[];
       
-      // Try cache first for faster results
-      final cachedResults = await cacheService.searchCachedVerses(query, translation);
-      if (cachedResults.isNotEmpty) {
-        results.addAll(cachedResults);
-        // Apply limit to cached results if specified
-        if (limit != null && results.length > limit) {
-          return results.take(limit).toList();
-        }
-      }
+      // // Try cache first for faster results
+      // final cachedResults = await cacheService.searchCachedVerses(query, translation);
+      // if (cachedResults.isNotEmpty) {
+      //   results.addAll(cachedResults);
+      //   // Apply limit to cached results if specified
+      //   if (limit != null && results.length > limit) {
+      //     return results.take(limit).toList();
+      //   }
+      // }
       
       // Check connectivity for API search
       final connectivity = await Connectivity().checkConnectivity();
       if (connectivity != ConnectivityResult.none && results.length < (limit ?? 50)) {
         try {
           // Fetch from API with remaining limit
-          final apiResults = await remoteDataSource.fetchVerses(
-            query, 
-            translation: translation,
+          final apiResults = await remoteDataSource.search(
+            query
           );
           
           // Merge results, avoiding duplicates
@@ -204,7 +203,7 @@ class BibleRepositoryImpl implements BibleRepository {
         throw Exception('No internet connection');
       }
       
-      return await remoteDataSource.fetchVerses(reference, translation: translation);
+      return await remoteDataSource.fetchVerses(reference, translation);
     } catch (e) {
       throw Exception('Failed to get verse by reference: $e');
     }

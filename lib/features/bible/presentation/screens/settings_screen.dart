@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
+import '../../data/datasources/offline_cache_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -274,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               dropdownColor: AppColors.surface,
               underline: const SizedBox(),
               style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-              items: ['KJV', 'NIV', 'ESV', 'NASB', 'NLT']
+              items: ['KJV', 'NIV', 'ESV', 'BSB', 'ASV']
                   .map((t) => DropdownMenuItem(
                         value: t,
                         child: Text(t, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
@@ -344,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () {
-              // Clear cache logic here
+              OfflineCacheService().clearCache();
               Get.back();
               Get.snackbar('Success', 'Cache cleared successfully');
             },

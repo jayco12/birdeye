@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
               
               // App Title
               Text(
-                'Blackbird',
+                'BirdEye',
                 style: AppTextStyles.displayLarge.copyWith(
                   color: Colors.white,
                   fontSize: 48,

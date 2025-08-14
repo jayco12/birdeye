@@ -20,7 +20,10 @@ class BibleController extends GetxController {
   var selectedTranslation = 'KJV'.obs;
   var isLoading = false.obs;
   var error = ''.obs;
-  
+ var readMode = false.obs;
+   RxString highlightQuery = ''.obs;
+     RxSet<String> highlightedVerses = <String>{}.obs;
+
   // Bible comparison features
   var selectedTranslationsForComparison = <String>['KJV', 'NIV'].obs;
   var comparisonVerses = <Verse>[].obs;
@@ -35,10 +38,30 @@ class BibleController extends GetxController {
     loadBooks();
     _loadBookmarks();
   }
+ String _verseKey(Verse verse) {
+    return '${verse.bookAbbreviation}-${verse.chapterNumber}-${verse.verseNumber}';
+  }
 
+  // Check if a verse is highlighted
+  bool isHighlighted(Verse verse) {
+    return highlightedVerses.contains(_verseKey(verse));
+  }
+
+  // Toggle highlight state for a verse
+  void toggleHighlight(Verse verse) {
+    final key = _verseKey(verse);
+    if (highlightedVerses.contains(key)) {
+      highlightedVerses.remove(key);
+    } else {
+      highlightedVerses.add(key);
+    }
+  }
   Future<void> _loadBookmarks() async {
     final bookmarks = await _localStorage.getBookmarks();
     bookmarkedVerses.assignAll(bookmarks);
+  }
+  void setHighlightQuery(String query) {
+    highlightQuery.value = query;
   }
 
 void setTranslation(String newTranslation) {
@@ -213,7 +236,7 @@ Future<List<Verse>> _performOptimizedSearch(String query) async {
     try {
       isLoading.value = true;
       error.value = '';
-      final loadedVerses = await repository.getVerses(bookAbbreviation, chapterNumber);
+      final loadedVerses = await repository.getVerses(bookAbbreviation, chapterNumber,translation: selectedTranslation.value,);
       verses.assignAll(loadedVerses);
 
     } catch (e) {

@@ -164,7 +164,7 @@ class BookmarksScreen extends GetView<BibleController> {
               const Icon(Icons.translate, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text(
-                verse.translation,
+                "KJV",
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),

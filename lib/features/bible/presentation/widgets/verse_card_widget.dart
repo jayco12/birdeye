@@ -16,17 +16,19 @@ class VerseCardWidget extends StatelessWidget {
   final bool showBookReference;
   final String? highlightQuery;
   final VoidCallback? onTap;
-
+ final bool showActions;
   const VerseCardWidget({
     super.key,
     required this.verse,
     this.showBookReference = false,
     this.highlightQuery,
     this.onTap,
+      this.showActions = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<BibleController>();
     return GlassCard(
       onTap: onTap,
       child: Column(
@@ -36,7 +38,12 @@ class VerseCardWidget extends StatelessWidget {
           const SizedBox(height: 16),
           _buildVerseText(),
           const SizedBox(height: 12),
-          _buildActionButtons(context),
+           Obx(() {
+            if (controller.readMode.value) {
+              return const SizedBox.shrink();
+            }
+            return _buildActionButtons(context);
+          }),
         ],
       ),
     );
@@ -152,8 +159,8 @@ class VerseCardWidget extends StatelessWidget {
       runSpacing: 8,
       children: [
         _buildActionButton(
-          icon: Icons.psychology,
-          label: 'AI Analysis',
+          icon: Icons.lightbulb, // Or another icon like Icons.lightbulb_outline
+          label: 'Verse Analysis',
           onPressed: () => _showAIVerseAnalysis(context),
         ),
         _buildActionButton(

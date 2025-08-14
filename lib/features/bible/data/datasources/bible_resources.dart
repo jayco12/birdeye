@@ -78,6 +78,12 @@ class BibleResources {
       type: ResourceType.earlyFathers,
       description: 'Early Church Fathers writings and references',
     ),
+    BibleResource(
+      name: 'Contributions',
+      baseUrl: 'https://contributions.blackbirdapp.dev',
+      type: ResourceType.contributions,
+      description: 'Community contributions and resources',
+    ),
   ];
 
   static List<BibleResource> getResourcesByType(ResourceType type) {

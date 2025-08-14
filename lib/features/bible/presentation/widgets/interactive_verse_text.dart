@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/verse.dart';
 import '../../data/models/verse_model.dart';
@@ -17,26 +18,38 @@ class InteractiveVerseText extends StatelessWidget {
   Widget build(BuildContext context) {
     if (verse is VerseModel) {
       final verseModel = verse as VerseModel;
-      if (verseModel.phraseData.isNotEmpty) {
-        return Wrap(
-          children: verseModel.phraseData.map((phrase) {
-            final hasStrongs = phrase['hasStrongs'] as bool;
-            final text = phrase['text'] as String;
-            
-            return GestureDetector(
-              onTap: hasStrongs ? () => _onPhraseTap(context, phrase) : null,
-              child: Text(
-                text,
-                style: baseStyle?.copyWith(
-                  decoration: hasStrongs ? TextDecoration.underline : null,
-                  decorationStyle: TextDecorationStyle.solid,
-                  decorationColor: hasStrongs ? const Color(0xFF2196F3) : null,
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      }
+   
+if ((verseModel.strongsMappedText?.isNotEmpty ?? false)) {
+  return Wrap(
+    children: verseModel.strongsMappedText!.map((phrase) {
+      final hasStrongs = phrase['hasStrongs'] as bool? ?? false;
+      final strongNumber = phrase['strongsNumber']?.toString() ?? '';
+      final text = phrase['text']?.toString() ?? '';
+   if (kDebugMode) {
+     print({"$hasStrongs $strongNumber $text"});
+   }
+      return GestureDetector(
+        onTap: hasStrongs
+            ? () => _onPhraseTap(context, {
+                  'hasStrongs': hasStrongs,
+                  'strongsNumber': strongNumber,
+                  'text': text,
+                })
+            : null,
+        child: Text(
+          text,
+          style: baseStyle?.copyWith(
+            decoration: hasStrongs ? TextDecoration.underline : null,
+            decorationColor: hasStrongs ? const Color(0xFF2196F3) : null,
+          ),
+        ),
+      );
+    }).toList(),
+  );
+}
+
+
+
     }
     
     // Fallback for verses without phrase data

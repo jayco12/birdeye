@@ -31,20 +31,21 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may access the microphone to enable audio features.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app may use speech recognition to enable voice-to-text features.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>This app sends daily Bible verse notifications to help you stay connected with God's Word.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>background-processing</string>
 		<string>bluetooth-peripheral</string>
-		<string>audio</string>
 		<string>fetch</string>
-		<string>processing</string>
 		<string>location</string>
-		<string>push-to-talk</string>
 		<string>remote-notification</string>
+		<string>audio</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import '../constants/app_colors.dart';
 
@@ -34,7 +35,7 @@ class GlassCard extends StatelessWidget {
             width: width ?? double.infinity,
             height: height,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -44,19 +45,19 @@ class GlassCard extends StatelessWidget {
                 ],
               ),
               border: Border.all(
-                width: 2,
+                width: 2.w,
                 color: Colors.white.withOpacity(0.2),
               ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  blurRadius: 20.r,
+                  offset: Offset(0, 8.h),
                 ),
               ],
             ),
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(16),
+              padding: padding ?? EdgeInsets.all(16.w),
               child: child,
             ),
           ),

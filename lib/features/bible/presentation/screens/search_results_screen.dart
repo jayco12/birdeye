@@ -7,11 +7,14 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
 import '../../../../core/global_widgets/loading_states.dart';
 import '../../application/bible_controller.dart';
+import '../../data/models/verse_model.dart';
+import '../../domain/entities/verse.dart';
 import '../widgets/verse_card_widget.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String searchQuery;
-  const SearchResultsScreen({Key? key, required this.searchQuery}) : super(key: key);
+  const SearchResultsScreen({Key? key, required this.searchQuery})
+      : super(key: key);
 
   @override
   State<SearchResultsScreen> createState() => _SearchResultsScreenState();
@@ -20,12 +23,19 @@ class SearchResultsScreen extends StatefulWidget {
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
   final BibleController controller = Get.find();
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.searchVerses(widget.searchQuery);
+      
+    });
+  }
 @override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    controller.searchVerses(widget.searchQuery);
-  });
+void dispose() {
+  super.dispose();
+  
+  controller.verses.clear(); 
 }
 
   @override
@@ -77,19 +87,25 @@ void initState() {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  Icon(
-                    Icons.search,
-                    size: 40,
-                    color: Colors.white.withOpacity(0.3),
+                  GestureDetector(
+                    onTap: () {
+                      ;
+                      controller.searchVerses(widget.searchQuery);
+                    },
+                    child: Icon(
+                      Icons.search,
+                      size: 40,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Obx(() => Text(
-                    '${controller.verses.length} results for "${widget.searchQuery}"',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                    ),
-                  )),
+                        '${controller.verses.length} results for "${widget.searchQuery}"',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -118,11 +134,45 @@ void initState() {
       } else if (controller.verses.isEmpty) {
         return _buildEmptyState();
       }
-      
+
       return SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final verse = controller.verses[index];
+            final verse = controller.verses[index]; // Verse type
+
+            // Internal widget for search result
+            Widget searchVerseTile(Verse verse) {
+              return Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Book + chapter reference
+                    Text(
+                      '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}',
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Verse text
+                    Text(
+                      verse.text,
+                      style:
+                          const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             return AnimationConfiguration.staggeredList(
               position: index,
               duration: const Duration(milliseconds: 400),
@@ -131,11 +181,7 @@ void initState() {
                 child: FadeInAnimation(
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: VerseCardWidget(
-                      verse: verse,
-                      showBookReference: true,
-                      highlightQuery: widget.searchQuery,
-                    ),
+                    child: searchVerseTile(verse),
                   ),
                 ),
               ),
@@ -170,7 +216,8 @@ void initState() {
               const SizedBox(height: 16),
               Text(
                 'Search Error',
-                style: AppTextStyles.headingSmall.copyWith(color: AppColors.error),
+                style:
+                    AppTextStyles.headingSmall.copyWith(color: AppColors.error),
               ),
               const SizedBox(height: 8),
               Text(
@@ -247,7 +294,8 @@ void initState() {
             _buildFilterOption('Old Testament', Icons.book),
             _buildFilterOption('New Testament', Icons.auto_stories),
             _buildFilterOption('Sort by Relevance', Icons.sort),
-            _buildFilterOption('Sort by Book Order', Icons.format_list_numbered),
+            _buildFilterOption(
+                'Sort by Book Order', Icons.format_list_numbered),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,

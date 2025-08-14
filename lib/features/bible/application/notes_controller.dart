@@ -1,21 +1,93 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/models/contribution_model.dart';
 import '../domain/entities/verse.dart';
 import '../domain/entities/highlight.dart';
 import '../data/datasources/local_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../presentation/screens/all_notes_screen.dart';
 
 class NotesController extends GetxController {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final RxMap<String, List<VerseNote>> verseNotes = <String, List<VerseNote>>{}.obs;
   final RxMap<String, List<Highlight>> verseHighlights = <String, List<Highlight>>{}.obs;
   final LocalStorage _localStorage = LocalStorage();
+  final RxMap<String, List<VerseContribution>> verseContributions = <String, List<VerseContribution>>{}.obs;
 
   @override
   void onInit() {
     super.onInit();
     _loadData();
+    _listenToContributions();
+  }
+void _listenToContributions() {
+    _firestore.collection('verse_contributions').snapshots().listen((snapshot) {
+      final Map<String, List<VerseContribution>> contributionsMap = {};
+      for (var doc in snapshot.docs) {
+        final contribution = VerseContribution.fromMap(doc.data());
+        contributionsMap.putIfAbsent(contribution.verseReference, () => []).add(contribution);
+      }
+      verseContributions.assignAll(contributionsMap);
+    });
   }
 
+  Future<void> addContribution(String verseReference, String content, String contributorName) async {
+    final newId = _firestore.collection('verse_contributions').doc().id;
+    final contribution = VerseContribution(
+      id: newId,
+      verseReference: verseReference,
+      content: content,
+      contributorName: contributorName,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    try {
+      await _firestore.collection('verse_contributions').doc(newId).set(contribution.toMap());
+      // Local update is automatic via the snapshot listener (_listenToContributions)
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to submit contribution: $e');
+    }
+  }
+
+  Future<void> deleteContribution(String contributionId, String reference) async {
+    try {
+      await _firestore.collection('verse_contributions').doc(contributionId).delete();
+      // Local update is automatic via snapshot listener
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to delete contribution: $e');
+    }
+  }
+Future<void> _submitContributionToBackend(VerseContribution contribution) async {
+  final url = Uri.parse('https://yourbackend.example.com/contributions');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'verseReference': contribution.verseReference,
+        'content': contribution.content,
+        'contributorName': contribution.contributorName,
+        'createdAt': contribution.createdAt.toIso8601String(),
+        'updatedAt': contribution.updatedAt.toIso8601String(),
+        'id': contribution.id,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to submit contribution');
+    }
+  } catch (e) {
+    // You may want to queue retry or notify user
+    print('Error submitting contribution: $e');
+  }
+}
   Future<void> _loadData() async {
     final notes = await _localStorage.getNotes();
     final highlights = await _localStorage.getHighlights();

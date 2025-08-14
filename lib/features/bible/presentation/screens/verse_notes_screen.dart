@@ -2,17 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import '../../application/notes_controller.dart';
+import '../../data/models/contribution_model.dart';
 import '../../domain/entities/verse.dart';
-import '../../domain/entities/highlight.dart';
+import '../../domain/entities/highlight.dart'; // You might keep highlights too
 import '../widgets/highlighted_verse_text.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/global_widgets/animated_widgets.dart';
 
+enum DisplayMode { notes, contributions }
+
 class VerseNotesScreen extends StatelessWidget {
   final Verse verse;
 
-  const VerseNotesScreen({super.key, required this.verse});
+  VerseNotesScreen({super.key, required this.verse});
+
+final Rx<DisplayMode> displayMode = DisplayMode.notes.obs;
+
+  final TextEditingController contributorController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +33,7 @@ class VerseNotesScreen extends StatelessWidget {
         ),
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
+  SliverAppBar(
               expandedHeight: 120,
               floating: false,
               pinned: true,
@@ -55,11 +62,55 @@ class VerseNotesScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildVerseCard().animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
+                    _buildVerseCard(),
                     const SizedBox(height: 16),
-                    _buildNoteInput(noteController, notesController).animate().fadeIn(duration: 700.ms, delay: 100.ms),
+                    Obx(() => ToggleButtons(
+                      color: AppColors.textSecondary,
+                      isSelected: [
+                        displayMode.value == DisplayMode.notes,
+                        displayMode.value == DisplayMode.contributions,
+                      ],
+                      onPressed: (index) {
+                        displayMode.value = DisplayMode.values[index];
+                      },
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Text('Notes', style: TextStyle(color: AppColors.textPrimary),),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Text('Contributions', style: TextStyle(color: AppColors.textPrimary),),
+                        ),
+                      ],
+                    )),
                     const SizedBox(height: 16),
-                    _buildNotesAndHighlights(notesController).animate().fadeIn(duration: 800.ms, delay: 200.ms),
+
+                    // Contributor Name input - only show if contributions are selected
+                    Obx(() {
+                      if (displayMode.value == DisplayMode.contributions) {
+                        return GlassCard(
+                          child: TextField(
+                            controller: contributorController,
+                            decoration: InputDecoration(
+                              hintText: 'Contributor name',
+                              hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            ),
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
+                    const SizedBox(height: 12),
+                    if (displayMode.value == DisplayMode.contributions)
+                      const SizedBox(height: 12),
+
+                    _buildNoteInput(noteController, contributorController, notesController),
+                    const SizedBox(height: 16),
+                    Obx(() => _buildItemsList(notesController)),
                   ],
                 ),
               ),
@@ -82,7 +133,7 @@ class VerseNotesScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber} (${verse.translation})',
+              '${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber} ("KJV")',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -102,132 +153,93 @@ class VerseNotesScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildNoteInput(TextEditingController noteController, NotesController notesController) {
-    return CompactGlassCard(
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: noteController,
-              decoration: InputDecoration(
-                hintText: 'Add a note...',
-                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-              maxLines: 2,
-            ),
-          ),
-          const SizedBox(width: 12),
-          FloatingActionBubble(
-            icon: Icons.add,
-            onPressed: () {
-              if (noteController.text.isNotEmpty) {
-                notesController.addNote(verse.reference, noteController.text);
-                noteController.clear();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotesAndHighlights(NotesController notesController) {
+  Widget _buildNoteInput(TextEditingController noteController, TextEditingController contributorController, NotesController notesController) {
     return Obx(() {
-      final notes = notesController.getNotesForVerse(verse.reference);
-      final highlights = notesController.getHighlightsForVerse(verse.reference);
-
-      if (notes.isEmpty && highlights.isEmpty) {
-        return SizedBox(
-          height: 200,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.note_add, size: 48, color: Colors.white),
+      final mode = displayMode.value;
+      return GlassCard(
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  hintText: mode == DisplayMode.notes
+                      ? 'Add a note...'
+                      : 'Add a contribution...',
+                  hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'No notes or highlights yet\nSelect text to highlight or add notes below',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                ),
-              ],
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                maxLines: 2,
+              ),
             ),
-          ),
-        );
-      }
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (highlights.isNotEmpty) ...[
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.warningGradient,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.highlight, color: Colors.white, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Highlights',
-                  style: AppTextStyles.headingSmall.copyWith(color: AppColors.textPrimary),
-                ),
-              ],
+            const SizedBox(width: 12),
+            FloatingActionBubble(
+              icon: Icons.add,
+              onPressed: () {
+                final text = noteController.text.trim();
+                if (text.isNotEmpty) {
+                  if (mode == DisplayMode.notes) {
+                    notesController.addNote(verse.reference, text);
+                  } else {
+                    final contributorName = contributorController.text.trim();
+                    if (contributorName.isEmpty) {
+                      Get.snackbar('Error', 'Please enter contributor name');
+                      return;
+                    }
+                    notesController.addContribution(verse.reference, text, contributorName);
+                    contributorController.clear();
+                  }
+                  noteController.clear();
+                }
+              },
             ),
-            const SizedBox(height: 12),
-            ...highlights.asMap().entries.map((entry) {
-              final index = entry.key;
-              return _buildHighlightItem(entry.value, notesController)
-                  .animate(delay: (index * 100).ms)
-                  .fadeIn(duration: 600.ms)
-                  .slideX(begin: 0.3);
-            }),
-            const SizedBox(height: 16),
           ],
-          if (notes.isNotEmpty) ...[
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.infoGradient,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.note, color: Colors.white, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Notes',
-                  style: AppTextStyles.headingSmall.copyWith(color: AppColors.textPrimary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...notes.asMap().entries.map((entry) {
-              final index = entry.key;
-              return _buildNoteItem(entry.value, notesController)
-                  .animate(delay: (index * 100).ms)
-                  .fadeIn(duration: 600.ms)
-                  .slideX(begin: 0.3);
-            }),
-          ],
-        ],
+        ),
       );
     });
+  }
+
+  Widget _buildItemsList(NotesController notesController) {
+    final mode = displayMode.value;
+
+    final allItems = <MapEntry<String, dynamic>>[];
+
+    if (mode == DisplayMode.notes) {
+      notesController.verseNotes[verse.reference]?.forEach((note) {
+        allItems.add(MapEntry(verse.reference, note));
+      });
+    } else {
+      notesController.verseContributions[verse.reference]?.forEach((contrib) {
+        allItems.add(MapEntry(verse.reference, contrib));
+      });
+    }
+
+    if (allItems.isEmpty) {
+      return Center(
+        child: Text(
+          mode == DisplayMode.notes
+              ? 'No notes yet. Add your notes!'
+              : 'No contributions yet. Be the first to contribute!',
+          style: AppTextStyles.headingSmall.copyWith(color: AppColors.textPrimary),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: allItems.map((entry) {
+        if (mode == DisplayMode.notes && entry.value is VerseNote) {
+          final note = entry.value as VerseNote;
+          return _buildNoteItem(note, notesController);
+        } else if (mode == DisplayMode.contributions && entry.value is VerseContribution) {
+          final contrib = entry.value as VerseContribution;
+          return _buildContributionItem(contrib, notesController);
+        }
+        return const SizedBox.shrink();
+      }).toList(),
+    );
   }
 
   Widget _buildNoteItem(VerseNote note, NotesController controller) {
@@ -245,23 +257,11 @@ class VerseNotesScreen extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  note.content,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(note.createdAt),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Text(
+              note.content,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           FloatingActionBubble(
@@ -273,9 +273,7 @@ class VerseNotesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHighlightItem(Highlight highlight, NotesController controller) {
-    final highlightedText = verse.text.substring(highlight.startIndex, highlight.endIndex);
-    
+  Widget _buildContributionItem(VerseContribution contribution, NotesController controller) {
     return CompactGlassCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -283,59 +281,26 @@ class VerseNotesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _getHighlightColor(highlight.color),
+              gradient: AppColors.secondaryGradient,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
             ),
-            child: const Icon(Icons.format_color_fill, color: Colors.white, size: 16),
+            child: const Icon(Icons.edit, color: Colors.white, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '"$highlightedText"',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(highlight.createdAt),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Text(
+              contribution.content,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           FloatingActionBubble(
             icon: Icons.delete,
-            onPressed: () => controller.deleteHighlight(highlight.id, verse.reference),
+            onPressed: () => controller.deleteContribution(contribution.id, verse.reference),
           ),
         ],
       ),
     );
-  }
-
-  Color _getHighlightColor(HighlightColor color) {
-    switch (color) {
-      case HighlightColor.yellow:
-        return Colors.yellow.withOpacity(0.3);
-      case HighlightColor.green:
-        return Colors.green.withOpacity(0.3);
-      case HighlightColor.blue:
-        return Colors.blue.withOpacity(0.3);
-      case HighlightColor.pink:
-        return Colors.pink.withOpacity(0.3);
-      case HighlightColor.orange:
-        return Colors.orange.withOpacity(0.3);
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

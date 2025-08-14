@@ -2,7 +2,8 @@ import '../../domain/entities/verse.dart';
 
 class VerseModel extends Verse {
   List<Map<String, dynamic>> _phraseData = [];
-  
+   List<Map<String, dynamic>>? strongsMappedText;
+
   VerseModel({
     required super.bookAbbreviation,
     required super.bookName,
@@ -94,7 +95,7 @@ class VerseModel extends Verse {
   factory VerseModel.fromJson(Map<String, dynamic> json, String translation) {
     String bookAbbr = json['book_id']?.toString() ?? json['book']?.toString() ?? '';
     String bookName = json['book_name']?.toString() ?? getBookNameFromAbbreviation(bookAbbr);
-    final testament = _getTestament(bookAbbr);
+    final testament = getTestament(bookAbbr);
 
     return VerseModel(
       bookAbbreviation: bookAbbr,
@@ -119,89 +120,119 @@ class VerseModel extends Verse {
     );
   }
 
-  factory VerseModel.fromBibleSdkVerse(Map<String, dynamic> json, String translation, String book, int chapter, int verse) {
-    String bookAbbr = book;
-    String bookName = getBookNameFromAbbreviation(bookAbbr);
-    final testament = _getTestament(bookAbbr);
-    
-    List<String>? strongNumbers;
-    String text = '';
-    List<Map<String, dynamic>> phraseData = [];
-    
-    if (json['phrases'] != null) {
-      final phrases = json['phrases'] as List;
-      
-      // Filter phrases to only include verse content (not headers/metadata)
-      final versePhrases = phrases.where((p) => 
-        p['usfm'] != null && 
-        (p['usfm'] as List).any((tag) => tag == 'v' || tag == 'w')
-      ).toList();
-      
-      // Extract Strong's numbers and build phrase data
-      strongNumbers = [];
-      for (final phrase in versePhrases) {
-        final phraseText = phrase['text']?.toString() ?? '';
-        final strongsNum = phrase['strongs_number'];
-        final strongsType = phrase['strongs_type'];
-        
-        phraseData.add({
-          'text': phraseText,
-          'hasStrongs': strongsNum != null,
-          'strongsNumber': strongsNum != null ? '${strongsType ?? 'H'}$strongsNum' : null,
-          'definition': phrase['definition'],
-          'originalWord': phrase['hebrew_word'] ?? phrase['greek_word'],
+factory VerseModel.fromApi(
+  Map<String, dynamic> json,
+  String translation,
+  String book,
+  int chapter,
+  int verse,
+) {
+  final bookAbbr = book.toUpperCase();
+  final bookName = getBookNameFromAbbreviation(bookAbbr);
+  final testament = getTestament(bookAbbr);
+
+  final String cleanText = json['clean_text']?.toString() ?? '';
+  final List<dynamic> strongsList = (json['strongs'] as List<dynamic>?) ?? [];
+
+  print('=== DEBUG: Clean Text ===\n$cleanText');
+  print('strongsList raw: ${json['strongs']}');
+
+  final List<Map<String, dynamic>> strongsMappedText = [];
+  final matchedRanges = <int, int>{}; // start -> end indexes for matched words
+
+  int searchStart = 0; // where we are in the text
+
+  for (final s in strongsList) {
+    final phrase = s['text']?.toString() ?? '';
+    final number = s['number']?.toString() ?? '';
+
+    if (phrase.isEmpty) continue;
+
+    // Search for next occurrence after searchStart
+    final idx = cleanText.indexOf(phrase, searchStart);
+
+    if (idx != -1) {
+      // If there is any gap text before this phrase, add it as non-clickable
+      if (idx > searchStart) {
+        final gapText = cleanText.substring(searchStart, idx);
+        strongsMappedText.add({
+          'text': gapText,
+          'hasStrongs': false,
+          'strongsNumber': '',
         });
-        
-        if (strongsNum != null) {
-          strongNumbers.add('${strongsType ?? 'H'}$strongsNum');
-        }
       }
-      
-      if (strongNumbers.isEmpty) strongNumbers = null;
-      text = phraseData.map((p) => p['text']).join('');
+
+      // Add the clickable Strong’s phrase
+      strongsMappedText.add({
+        'text': phrase,
+        'hasStrongs': number.isNotEmpty,
+        'strongsNumber': number,
+      });
+
+      matchedRanges[idx] = idx + phrase.length;
+      searchStart = idx + phrase.length; // move past this phrase
     }
-
-    final verseModel = VerseModel(
-      bookAbbreviation: bookAbbr,
-      bookName: bookName,
-      chapterNumber: chapter,
-      reference: '$bookName $chapter:$verse',
-      verseNumber: verse,
-      text: text,
-      translation: translation,
-      testament: testament,
-      strongNumbers: strongNumbers?.isNotEmpty == true ? strongNumbers : null,
-      isBookmarked: false,
-      notes: null,
-    );
-    
-    // Store phrase data for rich text display
-    verseModel._phraseData = phraseData;
-    return verseModel;
   }
 
-  factory VerseModel.fromBibleSdkSearch(Map<String, dynamic> json, String translation) {
-    String bookAbbr = json['book']?.toString() ?? '';
-    String bookName = getBookNameFromAbbreviation(bookAbbr);
-    final testament = _getTestament(bookAbbr);
-    
-    int chapter = json['chapter'] is int ? json['chapter'] : int.tryParse(json['chapter']?.toString() ?? '') ?? 0;
-    int verse = json['verse'] is int ? json['verse'] : int.tryParse(json['verse']?.toString() ?? '') ?? 0;
-
-    return VerseModel(
-      bookAbbreviation: bookAbbr,
-      bookName: bookName,
-      chapterNumber: chapter,
-      reference: '$bookName $chapter:$verse',
-      verseNumber: verse,
-      text: json['text']?.toString() ?? '',
-      translation: translation,
-      testament: testament,
-      strongNumbers: json['strongs'] != null ? List<String>.from(json['strongs']) : null,
-      isBookmarked: false,
-      notes: null,
-    );
+  // Add any leftover text after last match
+  if (searchStart < cleanText.length) {
+    strongsMappedText.add({
+      'text': cleanText.substring(searchStart),
+      'hasStrongs': false,
+      'strongsNumber': '',
+    });
   }
+
+  // Build model
+  final verseModel = VerseModel(
+    bookAbbreviation: bookAbbr,
+    bookName: bookName,
+    chapterNumber: chapter,
+    reference: '$bookName $chapter:$verse',
+    verseNumber: verse,
+    text: cleanText,
+    translation: translation,
+    testament: testament,
+    strongNumbers: strongsList
+        .map((e) => e['number']?.toString() ?? '')
+        .where((n) => n.isNotEmpty)
+        .toList(),
+    isBookmarked: false,
+    notes: null,
+  );
+
+  verseModel.strongsMappedText = strongsMappedText;
+
+  print("=== DEBUG: Strong's Mapping for UI (reading order) ===");
+  for (final item in strongsMappedText) {
+    print("${item['strongsNumber']}: ${item['text']}");
+  }
+
+  return verseModel;
+}
+
+  // factory VerseModel.fromBibleSdkSearch(Map<String, dynamic> json, String translation) {
+  //   String bookAbbr = json['book']?.toString() ?? '';
+  //   String bookName = getBookNameFromAbbreviation(bookAbbr);
+  //   final testament = getTestament(bookAbbr);
+    
+  //   int chapter = json['chapter'] is int ? json['chapter'] : int.tryParse(json['chapter']?.toString() ?? '') ?? 0;
+  //   int verse = json['verse'] is int ? json['verse'] : int.tryParse(json['verse']?.toString() ?? '') ?? 0;
+
+  //   return VerseModel(
+  //     bookAbbreviation: bookAbbr,
+  //     bookName: bookName,
+  //     chapterNumber: chapter,
+  //     reference: '$bookName $chapter:$verse',
+  //     verseNumber: verse,
+  //     text: json['text']?.toString() ?? '',
+  //     translation: translation,
+  //     testament: testament,
+  //     strongNumbers: json['strongs'] != null ? List<String>.from(json['strongs']) : null,
+  //     isBookmarked: false,
+  //     notes: null,
+  //   );
+  // }
 
   factory VerseModel.fromDatabase(Map<String, dynamic> map) {
     return VerseModel(
@@ -250,12 +281,12 @@ class VerseModel extends Verse {
     };
   }
 
-  static String _getAbbreviationFromName(String bookName) {
+  static String getAbbreviationFromName(String bookName) {
     final nameToAbbr = abbreviationToFullName.map((k, v) => MapEntry(v, k));
     return nameToAbbr[bookName] ?? bookName.substring(0, 3).toUpperCase();
   }
 
-  static Testament _getTestament(String bookAbbr) {
+  static Testament getTestament(String bookAbbr) {
     const oldTestamentBooks = {
       'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT',
       '1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH',

@@ -97,30 +97,36 @@ class _ApologeticsResourcesScreenState extends State<ApologeticsResourcesScreen>
       ),
     );
   }
-
-  Widget _buildSearchSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search apologetics topics...',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () => _searchTopic(_searchController.text),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.white,
+Widget _buildSearchSection() {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: TextField(
+      controller: _searchController,
+      style: const TextStyle(color: Colors.black),  // Make input text black
+      decoration: InputDecoration(
+        hintText: 'Search apologetics topics...',
+        hintStyle: const TextStyle(color: Colors.black54),  // Hint text subtle black
+        prefixIcon: const Icon(Icons.search, color: Colors.black), // black search icon
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.send, color: Colors.black),  // black send icon
+          onPressed: () => _searchTopic(_searchController.text),
         ),
-        onSubmitted: _searchTopic,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.black), // black border when enabled
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.black, width: 2), // black thicker border on focus
+        ),
+        filled: true,
+        fillColor: Colors.white,  // White background as you had it
       ),
-    );
-  }
+      onSubmitted: _searchTopic,
+      cursorColor: Colors.black,  // black cursor
+    ),
+  );
+}
 
   Widget _buildTopicChips() {
     final topics = _service.getPopularTopics();

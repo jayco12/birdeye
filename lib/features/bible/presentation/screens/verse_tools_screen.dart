@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../domain/entities/verse.dart';
 import '../../domain/entities/bible_resource.dart';
+import 'contribution_screen.dart';
 import 'verse_videos_screen.dart';
 import 'resource_selection_screen.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -96,7 +97,7 @@ class VerseToolsScreen extends StatelessWidget {
               const Icon(Icons.translate, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
-                verse.translation,
+                "KJV",
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
@@ -119,7 +120,7 @@ class VerseToolsScreen extends StatelessWidget {
       ToolItem('Miscellaneous Aid', Icons.help_outline, ResourceType.miscellaneous, AppColors.primaryGradient),
       ToolItem('Early Church Fathers', Icons.church, ResourceType.earlyFathers, AppColors.accentGradient),
       ToolItem('Videos', Icons.play_circle, null, AppColors.errorGradient),
-
+      ToolItem('Contributions', Icons.web, ResourceType.contributions, AppColors.primaryGradient),
     ];
 
     return GridView.builder(
@@ -190,6 +191,14 @@ class VerseToolsScreen extends StatelessWidget {
   }
 
   void _openResourceSelection(BuildContext context, String title, ResourceType resourceType) {
+  if (resourceType == ResourceType.contributions) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ContributionsScreen(verse: verse),
+      ),
+    );
+  } else {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -201,6 +210,8 @@ class VerseToolsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
 }
 
 class ToolItem {

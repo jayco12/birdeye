@@ -53,7 +53,8 @@ class BibleDataPreloader {
           currentTask.value = 'Loading ${book.name} ${chapter.chapterNumber}...';
           
           try {
-            final verses = await _apiService.fetchVerses('${book.abbreviation} ${chapter.chapterNumber}');
+            final verses = await _apiService.fetchVerses('${book.abbreviation} ${chapter.chapterNumber}', 'KJV');
+
             await _cacheService.cacheVerses(verses.cast<VerseModel>());
             
             processedChapters++;
@@ -117,7 +118,7 @@ class BibleDataPreloader {
           currentTask.value = 'Loading ${book.name} ${chapter.chapterNumber}...';
           
           try {
-            final verses = await _apiService.fetchVerses('${book.abbreviation} ${chapter.chapterNumber}');
+            final verses = await _apiService.fetchVerses('${book.abbreviation} ${chapter.chapterNumber}','KJV');
             await _cacheService.cacheVerses(verses.cast<VerseModel>());
             
             processedChapters++;

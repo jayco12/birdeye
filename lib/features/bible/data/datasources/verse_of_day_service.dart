@@ -5,7 +5,7 @@ import '../models/verse_model.dart';
 import '../../../../core/config/api_keys.dart';
 
 class VerseOfDayService {
-  static const String baseUrl = 'https://biblesdk.com';
+  static const String baseUrl = 'https://birdeye.onrender.com';
   
   static const Map<String, int> bibleBooks = {
     'GEN': 50, 'EXO': 40, 'LEV': 27, 'NUM': 36, 'DEU': 34,
@@ -76,7 +76,7 @@ class VerseOfDayService {
           final verseNumbers = verseMap.keys.toList();
           final randomVerseNum = verseNumbers[Random().nextInt(verseNumbers.length)];
           
-          return VerseModel.fromBibleSdkVerse({
+          return VerseModel.fromApi({
             'phrases': verseMap[randomVerseNum]
           }, 'NET', book, chapter, randomVerseNum);
         }

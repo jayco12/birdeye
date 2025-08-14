@@ -80,7 +80,28 @@ class OfflineCacheService {
     
     await batch.commit();
   }
+ Future<void> updateChapterVerseCount(String bookAbbr, int chapterNumber, int verseCount) async {
+    final db = await database;
 
+    // Try to update existing chapter
+    final updated = await db.update(
+      'chapters',
+      {'verse_count': verseCount},
+      where: 'book_abbreviation = ? AND chapter_number = ?',
+      whereArgs: [bookAbbr, chapterNumber],
+    );
+
+    // If no row was updated, insert a new chapter entry
+    if (updated == 0) {
+      await cacheChapters(bookAbbr, [
+        Chapter(
+          bookAbbreviation: bookAbbr,
+          chapterNumber: chapterNumber,
+          versesCount: verseCount,
+        )
+      ]);
+    }
+  }
   Future<void> cacheChapters(String bookAbbreviation, List<Chapter> chapters) async {
     final db = await database;
     final batch = db.batch();
@@ -216,12 +237,17 @@ class OfflineCacheService {
     return (result.first['count'] as int) == 0;
   }
 
-  Future<void> clearCache() async {
-    final db = await database;
-    await db.delete('verses');
-    await db.delete('chapters');
-    await db.delete('books');
-  }
+Future<void> clearCache() async {
+  final db = await database;
+  await db.transaction((txn) async {
+    await txn.delete('verses');
+    await txn.delete('chapters');
+    await txn.delete('books');
+  });
+  print('✅ Offline Bible cache cleared!');
+}
+
+
 
   verse_entities.Testament _getTestament(String bookAbbr) {
     const oldTestamentBooks = {
